@@ -264,27 +264,26 @@ func parseOpts(s string) ModOpts {
 
 func gitClone(url, dest string) error {
 	logger.Printf("git clone %v %v\n", url, dest)
-	return run("git", []string{"clone", url, dest})
+	return run(cwd, "git", []string{"clone", url, dest})
 }
 
 func gitFetch(dest string) error {
-	os.Chdir(dest)
 	logger.Printf("git fetch -p in %v\n", dest)
-	return run("git", []string{"fetch", "-p"})
+	return run(dest, "git", []string{"fetch", "-p"})
 }
 
 func gitCheckout(dest, ref string) error {
-	os.Chdir(dest)
 	if ref == "" {
 		ref = "master"
 	}
 	logger.Printf("git checkout %v in %v\n", ref, dest)
-	return run("git", []string{"checkout", ref})
+	return run(dest, "git", []string{"checkout", ref})
 }
 
-func run(s string, args []string) error {
+func run(wd, s string, args []string) error {
 	//logger.Printf("[debug] %v %v\n", s, args)
 	cmd := exec.Command(s, args...)
+	cmd.Dir = wd
 	//cmd.Stdout = os.Stdout
 	//cmd.Stderr = os.Stderr
 	buf := bytes.NewBuffer([]byte{})
