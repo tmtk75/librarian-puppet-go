@@ -147,7 +147,8 @@ func parsePuppetfile(i io.Reader) []Mod {
 	return mods
 }
 
-func parseMod(s string) (Mod, error) {
+func parseMod(i string) (Mod, error) {
+	s := regexp.MustCompile(`#.*$`).ReplaceAllLiteralString(i, "")
 	re := regexp.MustCompile(`^mod\s+["']([a-z/_]+)['"]\s*(,\s*["'](\d\.\d(\.\d)?)["'])?$`).FindAllStringSubmatch(s, -1)
 	if len(re) > 0 {
 		n := re[0][1]

@@ -93,4 +93,9 @@ func TestParseMod(t *testing.T) {
 	if !(err == nil && m.name == "bar" && m.version == "" && m.user == "" && m.opts["git"] == "a-url" && m.opts["ref"] == "0.2.1") {
 		t.Errorf("%v %v", m, err)
 	}
+
+	m, err = parseMod(`mod 'garethr/erlang' #, :git => 'git://github.com/garethr/garethr-erlang.git'`)
+	if !(err == nil && m.name == "erlang" && m.version == "" && m.user == "garethr" && m.opts["git"] == "" && m.opts["ref"] == "") {
+		t.Errorf("%v %v", m, err)
+	}
 }
