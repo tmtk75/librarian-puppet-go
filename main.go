@@ -95,7 +95,7 @@ func install(mpath string) {
 	logger.Printf("cwd: %v", cwd)
 	logger.Printf("modulepath: %v", modulepath)
 
-	mods := parseMod(os.Stdin)
+	mods := parsePuppetfile(os.Stdin)
 
 	errs := make(chan Mod)
 	var wg sync.WaitGroup
@@ -123,39 +123,46 @@ func install(mpath string) {
 	}
 }
 
-func parseMod(i io.Reader) []Mod {
+func parsePuppetfile(i io.Reader) []Mod {
 	r := bufio.NewReader(i)
 	mods := make([]Mod, 0)
 	for {
 		b, _, err := r.ReadLine()
-		s := string(b)
 		if err == io.EOF {
 			break
 		}
+		s := string(b)
 		if s == "" || s[0] == '#' {
 			continue
 		}
 
-		re := regexp.MustCompile(`^mod[\s]+'([a-z/_]+)'\s*(,\s*'(\d\.\d\.\d)')?$`).FindAllStringSubmatch(s, -1)
-		if len(re) > 0 {
-			n := re[0][1]
-			v := ""
-			if len(re[0]) > 3 {
-				v = re[0][3]
-			}
-			nn := strings.Split(n, "/")
-			mods = append(mods, Mod{name: nn[1], user: nn[0], version: v, opts: ModOpts{}})
-			continue
+		m, err := parseMod(s)
+		if err != nil {
+			logger.Printf("[warn] %v\n", err)
 		}
-
-		re = regexp.MustCompile(`^mod[\s]+([^,]+),(.*?)$`).FindAllStringSubmatch(s, -1)
-		if len(re) > 0 {
-			mods = append(mods, Mod{name: unquote(re[0][1]), opts: parseOpts(re[0][2])})
-			continue
-		}
-		logger.Printf("[warn] ignore %v\n", s)
+		mods = append(mods, m)
 	}
 	return mods
+}
+
+func parseMod(s string) (Mod, error) {
+	re := regexp.MustCompile(`^mod[\s]+'([a-z/_]+)'\s*(,\s*'(\d\.\d\.\d)')?$`).FindAllStringSubmatch(s, -1)
+	if len(re) > 0 {
+		n := re[0][1]
+		v := ""
+		if len(re[0]) > 3 {
+			v = re[0][3]
+		}
+		nn := strings.Split(n, "/")
+		return Mod{name: nn[1], user: nn[0], version: v, opts: ModOpts{}}, nil
+	}
+
+	re = regexp.MustCompile(`^mod[\s]+([^,]+),(.*?)$`).FindAllStringSubmatch(s, -1)
+	if len(re) > 0 {
+		return Mod{name: unquote(re[0][1]), opts: parseOpts(re[0][2])}, nil
+	}
+
+	return Mod{}, fmt.Errorf("[warn] ignore %v", s)
 }
 
 type Res struct {
