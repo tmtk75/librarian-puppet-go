@@ -24,7 +24,7 @@ func main() {
 	app.Name = "librarian-puppet-go"
 	app.Version = "0.1.0"
 	app.Flags = []cli.Flag{
-		cli.BoolFlag{Name: "verbose"},
+		cli.BoolFlag{Name: "verbose", Usage: "Show logs verbosely"},
 	}
 	app.Before = func(c *cli.Context) error {
 		if c.Bool("verbose") {
@@ -34,7 +34,8 @@ func main() {
 	}
 	app.Commands = []cli.Command{
 		cli.Command{
-			Name: "install",
+			Name:  "install",
+			Usage: "Install modules with a Puppetfile given thru stdin",
 			Flags: []cli.Flag{
 				cli.StringFlag{Name: "modulepath", Value: "modules", Usage: "path to be for modules"},
 			},
