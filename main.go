@@ -146,7 +146,7 @@ func parsePuppetfile(i io.Reader) []Mod {
 }
 
 func parseMod(s string) (Mod, error) {
-	re := regexp.MustCompile(`^mod[\s]+'([a-z/_]+)'\s*(,\s*'(\d\.\d\.\d)')?$`).FindAllStringSubmatch(s, -1)
+	re := regexp.MustCompile(`^mod\s+'([a-z/_]+)'\s*(,\s*'(\d\.\d\.\d)')?$`).FindAllStringSubmatch(s, -1)
 	if len(re) > 0 {
 		n := re[0][1]
 		v := ""
@@ -157,7 +157,7 @@ func parseMod(s string) (Mod, error) {
 		return Mod{name: nn[1], user: nn[0], version: v, opts: ModOpts{}}, nil
 	}
 
-	re = regexp.MustCompile(`^mod[\s]+([^,]+),(.*?)$`).FindAllStringSubmatch(s, -1)
+	re = regexp.MustCompile(`^mod\s+([^,]+),(.*?)$`).FindAllStringSubmatch(s, -1)
 	if len(re) > 0 {
 		return Mod{name: unquote(re[0][1]), opts: parseOpts(re[0][2])}, nil
 	}
@@ -246,7 +246,7 @@ func unquote(s string) string {
 func parseOpts(s string) ModOpts {
 	m := make(ModOpts)
 	for _, e := range strings.Split(s, ",") {
-		re := regexp.MustCompile(`:([a-z_]+)[\s]+=>[^s+](.*)$`).FindAllStringSubmatch(e, -1)
+		re := regexp.MustCompile(`:([a-z_]+)\s*=>\s*(.*)$`).FindAllStringSubmatch(e, -1)
 		//fmt.Printf("%v", re)
 		if len(re) == 0 {
 			continue
