@@ -65,7 +65,7 @@ type Mod struct {
 }
 
 func (m Mod) String() string {
-	return fmt.Sprintf("%v\t%v\t%v\t%v", m.name, m.opts, m.user, m.version)
+	return fmt.Sprintf("name:%v\topts:%v\tuser:%v\tversion:%v", m.name, m.opts, m.user, m.version)
 }
 
 func (m Mod) Dest() string {
@@ -82,7 +82,6 @@ func paths(mpath string) (modpath string, cwd string) {
 	if err != nil {
 		logger.Fatalf("%v", err)
 	}
-	logger.Printf("cwd: %v", cwd)
 
 	mp, err := filepath.Abs(mpath)
 	if err != nil {
@@ -93,6 +92,7 @@ func paths(mpath string) (modpath string, cwd string) {
 
 func install(mpath string) {
 	modulepath, cwd = paths(mpath)
+	logger.Printf("cwd: %v", cwd)
 	logger.Printf("modulepath: %v", modulepath)
 
 	mods := parseMod(os.Stdin)
@@ -250,11 +250,13 @@ func parseOpts(s string) ModOpts {
 }
 
 func gitClone(url, dest string) error {
+	logger.Printf("git clone %v %v\n", url, dest)
 	return run("git", []string{"clone", url, dest})
 }
 
 func gitFetch(dest string) error {
 	os.Chdir(dest)
+	logger.Printf("git fetch -p in %v\n", dest)
 	return run("git", []string{"fetch", "-p"})
 }
 
@@ -263,6 +265,7 @@ func gitCheckout(dest, ref string) error {
 	if ref == "" {
 		ref = "master"
 	}
+	logger.Printf("git checkout %v in %v\n", ref, dest)
 	return run("git", []string{"checkout", ref})
 }
 

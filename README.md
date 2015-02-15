@@ -8,7 +8,7 @@ go run main.go install --modulepath /tmp/modules < Puppetfile
 # Performance
 * It takes about 30 seconds in order to clone about 80 modules
   although basically cloning modules strongly depends on the network speed :grin:
-* It takes about 5 seconds in order to checkout about 80 moudles.
+* It takes about 5 seconds in order to fetch & checkout about 80 moudles.
 
 ## Assumption
 ```
@@ -41,7 +41,7 @@ real    0m27.031s
 user    0m7.944s
 sys     0m7.078s
 ```
-Afterward checkout completes within 5 seconds.
+Afterward fetch & checkout complete within 5 seconds.
 ```
 $ time ./librarian-puppet-go install --modulepath modules < Puppetfile.2
 
