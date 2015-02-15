@@ -100,8 +100,8 @@ func install(mpath string) {
 
 	errs := make(chan Mod)
 	var wg sync.WaitGroup
+	wg.Add(len(mods))
 	for _, m := range mods {
-		wg.Add(1)
 		go func(m Mod) {
 			defer wg.Done()
 			installMod(m, errs)
