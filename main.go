@@ -114,6 +114,7 @@ func install(mpath string) {
 			failed = append(failed, e)
 		}
 	}()
+	close(errs)
 	wg.Wait()
 
 	for _, m := range failed {
