@@ -5,6 +5,8 @@ librarian-puppet-go is a simple tool to clone modules and to checkout based on P
 go run main.go install --modulepath /tmp/modules < Puppetfile
 ```
 
+NOTE: This is unstable due to two issues [#1](https://github.com/tmtk75/librarian-puppet-go/issues/1) and [#2](https://github.com/tmtk75/librarian-puppet-go/issues/2).
+
 # Performance
 * It takes about 30 seconds in order to clone about 80 modules
   although basically cloning modules strongly depends on the network speed :grin:
