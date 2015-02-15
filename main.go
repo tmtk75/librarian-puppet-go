@@ -140,6 +140,7 @@ func parsePuppetfile(i io.Reader) []Mod {
 		m, err := parseMod(s)
 		if err != nil {
 			logger.Printf("[warn] %v\n", err)
+			continue
 		}
 		mods = append(mods, m)
 	}
@@ -176,13 +177,16 @@ type Res struct {
 }
 
 func giturl(m Mod) string {
-	ep := "http://forgeapi.puppetlabs.com/v3/modules/" + m.user + "-" + m.name
+	ep := "https://forgeapi.puppetlabs.com/v3/modules/" + m.user + "-" + m.name
 	req, err := http.NewRequest("GET", ep, nil)
 	if err != nil {
 		log.Fatalf("%v", err)
 	}
 	c := http.Client{}
 	res, err := c.Do(req)
+	if (res.StatusCode / 100) != 2 {
+		log.Fatalf("%v\t%v\t%v\n", m, ep, res)
+	}
 
 	var v Res
 	b, err := ioutil.ReadAll(res.Body)

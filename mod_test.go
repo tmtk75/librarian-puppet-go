@@ -39,6 +39,11 @@ func TestParseMod(t *testing.T) {
 		t.Errorf("should return err")
 	}
 
+	m, err = parseMod(`forge "http://forge.puppetlabs.com"`)
+	if !(err != nil) {
+		t.Errorf("%v %v", m, err)
+	}
+
 	m, err = parseMod(`mod 'foo/bar'`)
 	if !(err == nil && m.name == "bar" && m.version == "" && m.user == "foo" && m.opts["git"] == "" && m.opts["ref"] == "") {
 		t.Errorf("%v %v", m, err)
