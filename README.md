@@ -49,3 +49,8 @@ real    0m7.282s
 user    0m4.266s
 sys     0m2.788s
 ```
+
+# Limitation
+Acceptable Puppetfile is NOT compatible to original Puppetfile written in DSL of Ruby.  
+A mod definition MUST be one line which contains `mod`, version string, `:git` or `:ref`.
+Please see [mod_test.go](./mod_test.go) for expected definitions.
