@@ -15,6 +15,7 @@ import (
 	"regexp"
 	"strings"
 	"sync"
+	"syscall"
 
 	"github.com/tmtk75/cli"
 )
@@ -22,7 +23,7 @@ import (
 func main() {
 	app := cli.NewApp()
 	app.Name = "librarian-puppet-go"
-	app.Version = "0.1.0"
+	app.Version = "0.1.1"
 	app.Flags = []cli.Flag{
 		cli.BoolFlag{Name: "verbose", Usage: "Show logs verbosely"},
 	}
@@ -104,7 +105,10 @@ func install(mpath string) {
 	for _, m := range mods {
 		go func(m Mod) {
 			defer wg.Done()
-			installMod(m, errs)
+			if err := installMod(m); err != nil {
+				m.err = err
+				errs <- m
+			}
 		}(m)
 	}
 
@@ -114,8 +118,8 @@ func install(mpath string) {
 			failed = append(failed, e)
 		}
 	}()
-	close(errs)
 	wg.Wait()
+	close(errs)
 
 	for _, m := range failed {
 		fmt.Printf("\t%v\t%v\t%v\n", m.err, m.cmd, m)
@@ -204,17 +208,17 @@ func giturl(m Mod) string {
 	return v.CurrentRelease.Metadata.Source
 }
 
-func installMod(m Mod, errs chan Mod) {
-	logger.Printf("%v\n", m)
+func installMod(m Mod) error {
 	if m.opts["git"] == "" {
 		m.opts["git"] = giturl(m)
+		if m.opts["git"] == "" {
+			log.Fatalf("[fatal] :git is empty %v", m)
+		}
 	}
+	logger.Printf("%v\n", m)
 
 	// start git operations
 	var err error
-	if m.opts["git"] == "" {
-		log.Fatalf("[fatal] %v", m)
-	}
 	if !exists(m.Dest()) {
 		err = gitClone(m.opts["git"], m.Dest())
 		m.cmd = "clone"
@@ -222,23 +226,25 @@ func installMod(m Mod, errs chan Mod) {
 		err = gitFetch(m.Dest())
 		m.cmd = "fetch"
 	}
-	m.err = err
 	if err != nil {
-		errs <- m
-		return
+		return err
 	}
 
-	//time.Sleep(250 * time.Millisecond) // to avoid git error, but this seems not to working
 	ver := m.version
 	if m.opts["ref"] != "" {
 		ver = m.opts["ref"]
 	}
+
 	err = gitCheckout(m.Dest(), ver)
 	m.cmd = "checkout"
-	m.err = err
 	if err != nil {
-		errs <- m
+		return err
 	}
+	if !isTag(m.Dest(), ver) {
+		err = gitPull(m.Dest(), ver)
+		m.cmd = "pull"
+	}
+	return err
 }
 
 func exists(filename string) bool {
@@ -263,6 +269,21 @@ func parseOpts(s string) ModOpts {
 	return m
 }
 
+func isTag(dest, tag string) bool {
+	cmd := exec.Command("git", "show-ref", "-q", "--verify", "refs/tags/"+tag)
+	cmd.Dir = dest
+	err := cmd.Run()
+	if exiterr, ok := err.(*exec.ExitError); ok {
+		if status, ok := exiterr.Sys().(syscall.WaitStatus); ok {
+			return status.ExitStatus() == 0
+		}
+	}
+	if err != nil {
+		log.Fatalf("[error] %v\t%v\t%v\n", err, dest, tag)
+	}
+	return true
+}
+
 func gitClone(url, dest string) error {
 	logger.Printf("git clone %v %v\n", url, dest)
 	return run(cwd, "git", []string{"clone", url, dest})
@@ -271,6 +292,11 @@ func gitClone(url, dest string) error {
 func gitFetch(dest string) error {
 	logger.Printf("git fetch -p in %v\n", dest)
 	return run(dest, "git", []string{"fetch", "-p"})
+}
+
+func gitPull(dest, ref string) error {
+	logger.Printf("git pull origin %v in %v\n", ref, dest)
+	return run(dest, "git", []string{"pull", "origin", ref})
 }
 
 func gitCheckout(dest, ref string) error {
