@@ -1,9 +1,32 @@
 # README
-librarian-puppet-go is a simple tool to clone modules and to checkout based on Puppetfile.
+librarian-puppet-go is a simple command to clone modules and to checkout based on Puppetfile.
 
 ```
 go run main.go install --modulepath /tmp/modules < Puppetfile
 ```
+
+# Feature
+This command ensures that git repositories are checked out with tag, ref and version.
+
+For instance, let's say you have a following Puppetfile.
+```
+mod 'bar', :git => 'git@github.com:tmtk75/tmtk75-bar.git', :ref => 'master'
+mod 'foo', :git => 'git@bitbucket.org:tmtk75/tmtk75-foo.git', :ref => 'v0.1.2'
+mod 'puppetlabs/stdlib', '4.1.0'
+```
+
+Then `modules` directory has these repositories after running the command.
+```
+modules
+  |-- bar       # chekced out at the latest of master origin/branch
+  |-- foo       # checked out at the specified tag, v0.1.2
+  `-- stdlib    # checked out at the commit versioned as 4.1.0 in puppetlabs.com
+```
+
+* Check out the present latest commit of `origin`/${branchname} if `:ref` is a branch.
+* Check out the tag if `:ref` is a tag.
+* Check out the commit registered with a version in puppetlabs.com
+  retrieving its URL of source repository using REST API. `puppet module` command is NOT used.
 
 # Performance
 * It takes about 30 seconds in order to clone about 80 modules
