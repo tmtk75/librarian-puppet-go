@@ -27,7 +27,7 @@ mod 'foo', :git => 'git-url'
 mod 'foo', :git => 'git-url', :ref => 'v0.1.1'  #
 `))
 	if !(len(mods) == 4) {
-		t.Errorf("should be 0")
+		t.Errorf("should be 4")
 	}
 }
 
