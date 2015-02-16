@@ -170,7 +170,7 @@ func parseMod(i string) (Mod, error) {
 		return Mod{name: unquote(re[0][1]), opts: parseOpts(re[0][2])}, nil
 	}
 
-	return Mod{}, fmt.Errorf("[warn] ignore %v", s)
+	return Mod{}, fmt.Errorf("ignore %v", s)
 }
 
 type Res struct {
