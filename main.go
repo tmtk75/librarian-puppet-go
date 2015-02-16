@@ -80,7 +80,7 @@ func paths(mpath string) (modpath string, cwd string) {
 		logger.Fatalf("%v", err)
 	}
 
-	d, err = filepath.Abs(cwd)
+	d, err = filepath.Abs(d)
 	if err != nil {
 		logger.Fatalf("%v", err)
 	}
