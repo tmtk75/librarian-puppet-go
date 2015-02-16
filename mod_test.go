@@ -64,7 +64,7 @@ func TestParseMod(t *testing.T) {
 		t.Errorf("%v %v", m, err)
 	}
 
-	m, err = parseMod(`mod 'bar',:git=>'a-git-url'`) // mo spacing
+	m, err = parseMod(`mod 'bar',:git=>'a-git-url'`) // no spacing
 	if !(err == nil && m.name == "bar" && m.version == "" && m.user == "" && m.opts["git"] == "a-git-url" && m.opts["ref"] == "") {
 		t.Errorf("%v %v", m, err)
 	}
@@ -74,7 +74,7 @@ func TestParseMod(t *testing.T) {
 		t.Errorf("%v %v", m, err)
 	}
 
-	m, err = parseMod(`mod 'bar',:git=>'a-git-url',:ref=>'0.1.1'`) // mo spacing
+	m, err = parseMod(`mod 'bar',:git=>'a-git-url',:ref=>'0.1.1'`) // no spacing
 	if !(err == nil && m.name == "bar" && m.version == "" && m.user == "" && m.opts["git"] == "a-git-url" && m.opts["ref"] == "0.1.1") {
 		t.Errorf("%v %v", m, err)
 	}
