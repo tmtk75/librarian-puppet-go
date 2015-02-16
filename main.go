@@ -50,7 +50,6 @@ func main() {
 }
 
 var logger = log.New(ioutil.Discard, "", log.LstdFlags)
-var cwd string
 var modulepath string
 
 type ModOpts map[string]string
@@ -74,27 +73,12 @@ func (m Mod) Dest() string {
 	return filepath.Join(modulepath, m.name)
 }
 
-func paths(mpath string) (modpath string, cwd string) {
-	d, err := os.Getwd()
-	if err != nil {
-		logger.Fatalf("%v", err)
-	}
-
-	d, err = filepath.Abs(d)
-	if err != nil {
-		logger.Fatalf("%v", err)
-	}
-
+func install(mpath string) {
 	mp, err := filepath.Abs(mpath)
 	if err != nil {
 		logger.Fatalf("%v", err)
 	}
-	return mp, d
-}
-
-func install(mpath string) {
-	modulepath, cwd = paths(mpath)
-	logger.Printf("cwd: %v", cwd)
+	modulepath = mp
 	logger.Printf("modulepath: %v", modulepath)
 
 	mods := parsePuppetfile(os.Stdin)
@@ -286,7 +270,7 @@ func isTag(dest, tag string) bool {
 
 func gitClone(url, dest string) error {
 	logger.Printf("git clone %v %v\n", url, dest)
-	return run(cwd, "git", []string{"clone", url, dest})
+	return run("", "git", []string{"clone", url, dest})
 }
 
 func gitFetch(dest string) error {
