@@ -17,6 +17,8 @@ import (
 	"sync"
 	"syscall"
 
+	"code.google.com/p/go.crypto/ssh/terminal"
+
 	"github.com/tmtk75/cli"
 )
 
@@ -40,9 +42,26 @@ func main() {
 			Flags: []cli.Flag{
 				cli.StringFlag{Name: "modulepath", Value: "modules", Usage: "path to be for modules"},
 			},
+			Args: "[filename]",
 			Action: func(c *cli.Context) {
 				p := c.String("modulepath")
-				install(p)
+				n, b := c.ArgFor("filename")
+				if b {
+					//if !exists(n) {
+					//	log.Fatalf("not found: %v", n)
+					//}
+					r, err := os.OpenFile(n, os.O_RDONLY, 0660)
+					if err != nil {
+						log.Fatalf("%v", err)
+					}
+					install(p, bufio.NewReader(r))
+				} else {
+					if !terminal.IsTerminal(int(os.Stdin.Fd())) {
+						install(p, os.Stdin)
+					} else {
+						cli.ShowCommandHelp(c, "install")
+					}
+				}
 			},
 		},
 	}
@@ -73,7 +92,7 @@ func (m Mod) Dest() string {
 	return filepath.Join(modulepath, m.name)
 }
 
-func install(mpath string) {
+func install(mpath string, src io.Reader) {
 	mp, err := filepath.Abs(mpath)
 	if err != nil {
 		logger.Fatalf("%v", err)
@@ -81,7 +100,7 @@ func install(mpath string) {
 	modulepath = mp
 	logger.Printf("modulepath: %v", modulepath)
 
-	mods := parsePuppetfile(os.Stdin)
+	mods := parsePuppetfile(src)
 
 	errs := make(chan Mod)
 	var wg sync.WaitGroup
