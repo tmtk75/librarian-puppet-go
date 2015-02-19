@@ -25,7 +25,7 @@ import (
 func main() {
 	app := cli.NewApp()
 	app.Name = "librarian-puppet-go"
-	app.Version = "0.1.2"
+	app.Version = "0.1.3"
 	app.Flags = []cli.Flag{
 		cli.BoolFlag{Name: "verbose", Usage: "Show logs verbosely"},
 	}
@@ -40,12 +40,15 @@ func main() {
 			Name:  "install",
 			Usage: "Install modules with a Puppetfile given thru stdin",
 			Flags: []cli.Flag{
-				cli.StringFlag{Name: "modulepath", Value: "modules", Usage: "path to be for modules"},
+				cli.StringFlag{Name: "modulepath", Value: "modules", Usage: "Path to be for modules"},
+				cli.IntFlag{Name: "throttle", Value: 0, Usage: `Throttle number of concurrent processes.
+                                Max is number of mod, min is 1. Max is used if 0 or negative number is given.`},
 			},
 			Args: "[filename]",
 			Action: func(c *cli.Context) {
 				p := c.String("modulepath")
 				n, b := c.ArgFor("filename")
+				t := c.Int("throttle")
 				if b {
 					//if !exists(n) {
 					//	log.Fatalf("not found: %v", n)
@@ -54,10 +57,10 @@ func main() {
 					if err != nil {
 						log.Fatalf("%v", err)
 					}
-					install(p, bufio.NewReader(r))
+					install(p, bufio.NewReader(r), t)
 				} else {
 					if !terminal.IsTerminal(int(os.Stdin.Fd())) {
-						install(p, os.Stdin)
+						install(p, os.Stdin, t)
 					} else {
 						cli.ShowCommandHelp(c, "install")
 					}
@@ -92,7 +95,7 @@ func (m Mod) Dest() string {
 	return filepath.Join(modulepath, m.name)
 }
 
-func install(mpath string, src io.Reader) {
+func install(mpath string, src io.Reader, throttle int) {
 	mp, err := filepath.Abs(mpath)
 	if err != nil {
 		logger.Fatalf("%v", err)
@@ -101,19 +104,33 @@ func install(mpath string, src io.Reader) {
 	logger.Printf("modulepath: %v", modulepath)
 
 	mods := parsePuppetfile(src)
+	if throttle < 1 || len(mods) < throttle {
+		throttle = len(mods)
+	}
+	logger.Printf("mods size: %v, throttle: %v", len(mods), throttle)
 
-	errs := make(chan Mod)
 	var wg sync.WaitGroup
 	wg.Add(len(mods))
-	for _, m := range mods {
-		go func(m Mod) {
-			defer wg.Done()
-			if err := installMod(m); err != nil {
-				m.err = err
-				errs <- m
+
+	tasks := make(chan Mod)
+	errs := make(chan Mod)
+
+	for i := 0; i < throttle; i++ {
+		go func() {
+			for m := range tasks {
+				defer wg.Done()
+				if err := installMod(m); err != nil {
+					m.err = err
+					errs <- m
+				}
 			}
-		}(m)
+		}()
 	}
+
+	for _, m := range mods {
+		tasks <- m
+	}
+	close(tasks)
 
 	failed := make([]Mod, 0)
 	go func() {
