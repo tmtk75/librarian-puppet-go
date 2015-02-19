@@ -127,17 +127,18 @@ func install(mpath string, src io.Reader, throttle int) {
 		}()
 	}
 
-	for _, m := range mods {
-		tasks <- m
-	}
-	close(tasks)
-
 	failed := make([]Mod, 0)
 	go func() {
 		for e := range errs {
 			failed = append(failed, e)
 		}
 	}()
+
+	for _, m := range mods {
+		tasks <- m
+	}
+	close(tasks)
+
 	wg.Wait()
 	close(errs)
 
