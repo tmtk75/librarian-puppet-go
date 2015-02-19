@@ -335,9 +335,5 @@ func run(wd, s string, args []string) error {
 	//cmd.Stderr = os.Stderr
 	buf := bytes.NewBuffer([]byte{})
 	cmd.Stderr = bufio.NewWriter(buf)
-	err := cmd.Run()
-	if err != nil {
-		fmt.Printf("[error] %v\t%v\n", err, buf)
-	}
-	return err
+	return fmt.Errorf("absolutely errors") //cmd.Run()
 }
