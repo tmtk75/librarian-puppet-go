@@ -16,6 +16,7 @@ import (
 	"strings"
 	"sync"
 	"syscall"
+	"time"
 
 	"code.google.com/p/go.crypto/ssh/terminal"
 
@@ -240,7 +241,7 @@ func installMod(m Mod) error {
 			log.Fatalf("[fatal] :git is empty %v", m)
 		}
 	}
-	logger.Printf("%v\n", m)
+	//logger.Printf("%v\n", m)
 
 	// start git operations
 	var err error
@@ -310,17 +311,14 @@ func isTag(dest, tag string) bool {
 }
 
 func gitClone(url, dest string) error {
-	logger.Printf("git clone %v %v\n", url, dest)
 	return run("", "git", []string{"clone", url, dest})
 }
 
 func gitFetch(dest string) error {
-	logger.Printf("git fetch -p in %v\n", dest)
 	return run(dest, "git", []string{"fetch", "-p"})
 }
 
 func gitPull(dest, ref string) error {
-	logger.Printf("git pull origin %v in %v\n", ref, dest)
 	return run(dest, "git", []string{"pull", "origin", ref})
 }
 
@@ -328,7 +326,6 @@ func gitCheckout(dest, ref string) error {
 	if ref == "" {
 		ref = "master"
 	}
-	logger.Printf("git checkout %v in %v\n", ref, dest)
 	return run(dest, "git", []string{"checkout", ref})
 }
 
@@ -340,9 +337,13 @@ func run(wd, s string, args []string) error {
 	//cmd.Stderr = os.Stderr
 	buf := bytes.NewBuffer([]byte{})
 	cmd.Stderr = bufio.NewWriter(buf)
+	logger.Printf("start: %v %v in %v", s, args, wd)
+	now := time.Now()
 	err := cmd.Run()
 	if err != nil {
 		fmt.Printf("[error] %v\t%v\n", err, buf)
 	}
+	elapsed := time.Since(now)
+	logger.Printf("done: %v %v %v in %v", elapsed, s, args, wd)
 	return err
 }
