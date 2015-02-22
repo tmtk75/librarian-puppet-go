@@ -223,10 +223,14 @@ func giturl(m Mod) string {
 	if err := json.Unmarshal(b, &v); err != nil {
 		log.Fatalf("%v", err)
 	}
-	if v.CurrentRelease.Metadata.Source == "UNKNOWN" {
-		return v.CurrentRelease.Metadata.ProjectPage
+
+	u := v.CurrentRelease.Metadata.Source
+	if u == "UNKNOWN" {
+		u = v.CurrentRelease.Metadata.ProjectPage
 	}
-	return v.CurrentRelease.Metadata.Source
+	// NOTE: workaround because 301 comes via http for github.com
+	//       and it's hard to handle it.
+	return regexp.MustCompile(`^http://`).ReplaceAllString(u, "https://")
 }
 
 func installMod(m Mod) error {
