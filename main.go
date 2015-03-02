@@ -144,7 +144,7 @@ func install(mpath string, src io.Reader, throttle int) {
 	close(errs)
 
 	for _, m := range failed {
-		fmt.Printf("\t%v\t%v\t%v\n", m.err, m.cmd, m)
+		log.Printf("\t%v\t%v\t%v\n", m.err, m.cmd, m)
 	}
 	if len(failed) > 0 {
 		os.Exit(1)
@@ -340,10 +340,12 @@ func run(wd, s string, args []string) error {
 	logger.Printf("start: %v %v in %v", s, args, wd)
 	now := time.Now()
 	err := cmd.Run()
+	prefix := "done"
 	if err != nil {
-		fmt.Printf("[error] %v\t%v\n", err, buf)
+		prefix = "error"
+		log.Printf("[error] %v\t%v\t%v\n", err, args, buf)
 	}
 	elapsed := time.Since(now)
-	logger.Printf("done: %v %v %v in %v", elapsed, s, args, wd)
+	logger.Printf("%v: %v %v %v in %v", prefix, elapsed, s, args, wd)
 	return err
 }
