@@ -26,7 +26,7 @@ import (
 func main() {
 	app := cli.NewApp()
 	app.Name = "librarian-puppet-go"
-	app.Version = "0.1.4"
+	app.Version = "0.1.5dev"
 	app.Flags = []cli.Flag{
 		cli.BoolFlag{Name: "verbose", Usage: "Show logs verbosely"},
 	}
@@ -40,40 +40,54 @@ func main() {
 		cli.Command{
 			Name:  "install",
 			Usage: "Install modules with a Puppetfile given thru stdin",
-			Flags: []cli.Flag{
-				cli.StringFlag{Name: "modulepath", Value: "modules", Usage: "Path to be for modules"},
-				cli.IntFlag{Name: "throttle", Value: 0, Usage: `Throttle number of concurrent processes.
-                                Max is number of mod, min is 1. Max is used if 0 or negative number is given.`},
-			},
-			Args: "[filename]",
+			Args:  "[filename]",
+			Flags: flags,
 			Action: func(c *cli.Context) {
-				p := c.String("modulepath")
-				n, b := c.ArgFor("filename")
-				t := c.Int("throttle")
-				if b {
-					//if !exists(n) {
-					//	log.Fatalf("not found: %v", n)
-					//}
-					r, err := os.OpenFile(n, os.O_RDONLY, 0660)
-					if err != nil {
-						log.Fatalf("%v", err)
-					}
-					install(p, bufio.NewReader(r), t)
-				} else {
-					if !terminal.IsTerminal(int(os.Stdin.Fd())) {
-						install(p, os.Stdin, t)
-					} else {
-						cli.ShowCommandHelp(c, "install")
-					}
-				}
+				realMain(c, "install")
+			},
+		},
+		cli.Command{
+			Name:  "checkout",
+			Usage: "Checkout modules without network access",
+			Args:  "[filename]",
+			Flags: flags,
+			Action: func(c *cli.Context) {
+				onlyCheckout = true
+				realMain(c, "checkout")
 			},
 		},
 	}
 	app.Run(os.Args)
 }
 
+var flags = []cli.Flag{
+	cli.StringFlag{Name: "modulepath", Value: "modules", Usage: "Path to be for modules"},
+	cli.IntFlag{Name: "throttle", Value: 0, Usage: `Throttle number of concurrent processes.
+                                Max is number of mod, min is 1. Max is used if 0 or negative number is given.`},
+}
+
+func realMain(c *cli.Context, cmdName string) {
+	p := c.String("modulepath")
+	n, b := c.ArgFor("filename")
+	t := c.Int("throttle")
+	if b {
+		r, err := os.OpenFile(n, os.O_RDONLY, 0660)
+		if err != nil {
+			log.Fatalf("%v", err)
+		}
+		install(p, bufio.NewReader(r), t)
+	} else {
+		if !terminal.IsTerminal(int(os.Stdin.Fd())) {
+			install(p, os.Stdin, t)
+		} else {
+			cli.ShowCommandHelp(c, cmdName)
+		}
+	}
+}
+
 var logger = log.New(ioutil.Discard, "", log.LstdFlags)
 var modulepath string
+var onlyCheckout bool
 
 type ModOpts map[string]string
 
@@ -249,8 +263,10 @@ func installMod(m Mod) error {
 		err = gitClone(m.opts["git"], m.Dest())
 		m.cmd = "clone"
 	} else {
-		err = gitFetch(m.Dest())
-		m.cmd = "fetch"
+		if !onlyCheckout {
+			err = gitFetch(m.Dest())
+			m.cmd = "fetch"
+		}
 	}
 	if err != nil {
 		return err
@@ -266,7 +282,7 @@ func installMod(m Mod) error {
 	if err != nil {
 		return err
 	}
-	if !isTag(m.Dest(), ver) {
+	if !isTag(m.Dest(), ver) && onlyCheckout {
 		err = gitPull(m.Dest(), ver)
 		m.cmd = "pull"
 	}
