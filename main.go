@@ -118,6 +118,14 @@ func (m Mod) Dest() string {
 	return filepath.Join(modulepath, m.name)
 }
 
+func (m *Mod) Replace(e *Mod) {
+	m.user = e.user
+	m.version = e.version
+	for k, v := range e.opts {
+		m.opts[k] = v
+	}
+}
+
 func install(mpath string, src io.Reader, throttle int) {
 	mp, err := filepath.Abs(mpath)
 	if err != nil {
@@ -224,12 +232,7 @@ func parsePuppetfile(i io.Reader) ([]Mod, error) {
 				n2m[e.name] = &a
 				result = append(result, &a)
 			} else {
-				it := n2m[e.name]
-				it.user = e.user
-				it.version = e.version
-				for k, v := range e.opts {
-					it.opts[k] = v
-				}
+				n2m[e.name].Replace(&e)
 			}
 		}
 	}
