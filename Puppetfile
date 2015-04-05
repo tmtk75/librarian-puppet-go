@@ -1,1 +1,2 @@
-mod 'puppetlabs/stdlib', '4.1.0'
+include 'Puppetfile.common'
+mod 'puppetlabs/concat'

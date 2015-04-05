@@ -66,15 +66,23 @@ var flags = []cli.Flag{
                                 Max is number of mod, min is 1. Max is used if 0 or negative number is given.`},
 }
 
+func readFromFile(n string) io.ReadCloser {
+	r, err := os.OpenFile(n, os.O_RDONLY, 0660)
+	if err != nil {
+		log.Fatalf("%v", err)
+	}
+	return r
+}
+
+var newReader func(string) io.ReadCloser = readFromFile
+
 func realMain(c *cli.Context, cmdName string) {
 	p := c.String("modulepath")
 	n, b := c.ArgFor("filename")
 	t := c.Int("throttle")
 	if b {
-		r, err := os.OpenFile(n, os.O_RDONLY, 0660)
-		if err != nil {
-			log.Fatalf("%v", err)
-		}
+		r := newReader(n)
+		defer r.Close()
 		install(p, bufio.NewReader(r), t)
 	} else {
 		if !terminal.IsTerminal(int(os.Stdin.Fd())) {
@@ -118,7 +126,10 @@ func install(mpath string, src io.Reader, throttle int) {
 	modulepath = mp
 	logger.Printf("modulepath: %v", modulepath)
 
-	mods := parsePuppetfile(src)
+	mods, err := parsePuppetfile(src)
+	if err != nil {
+		log.Fatalf("%v\n", err)
+	}
 	if throttle < 1 || len(mods) < throttle {
 		throttle = len(mods)
 	}
@@ -165,8 +176,9 @@ func install(mpath string, src io.Reader, throttle int) {
 	}
 }
 
-func parsePuppetfile(i io.Reader) []Mod {
+func parsePuppetfile(i io.Reader) ([]Mod, error) {
 	r := bufio.NewReader(i)
+	incs := make([][]Mod, 0)
 	mods := make([]Mod, 0)
 	for {
 		b, _, err := r.ReadLine()
@@ -178,19 +190,70 @@ func parsePuppetfile(i io.Reader) []Mod {
 			continue
 		}
 
+		if a := isInclude(s); a != "" {
+			if len(mods) > 0 {
+				return mods, fmt.Errorf("[error] include(s) must be at the top: %v", s)
+			}
+			logger.Printf("include: '%v'\n", a)
+
+			r := newReader(a)
+			defer r.Close()
+			inc, err := parsePuppetfile(bufio.NewReader(r))
+			if err != nil {
+				return mods, err
+			}
+			incs = append(incs, inc)
+			continue
+		}
+
 		m, err := parseMod(s)
 		if err != nil {
 			logger.Printf("[warn] %v\n", err)
-			continue
+			return mods, err
 		}
 		mods = append(mods, m)
 	}
-	return mods
+
+	incs = append(incs, mods)
+	n2m := map[string]*Mod{}
+	result := make([]*Mod, 0)
+	for _, i := range incs {
+		for _, e := range i {
+			if n2m[e.name] == nil {
+				a := e // copy
+				n2m[e.name] = &a
+				result = append(result, &a)
+			} else {
+				it := n2m[e.name]
+				it.user = e.user
+				it.version = e.version
+				for k, v := range e.opts {
+					it.opts[k] = v
+				}
+			}
+		}
+	}
+
+	res := make([]Mod, len(result))
+	for i, v := range result {
+		res[i] = *v
+	}
+
+	return res, nil
+}
+
+func isInclude(s string) string /* filename */ {
+	re := regexp.MustCompile(`include\s+["'](.*?)["']`).FindAllStringSubmatch(s, -1)
+	if len(re) == 0 {
+		return ""
+	}
+	//log.Printf("[TRACE] %v\n", re)
+	return re[0][1]
 }
 
 func parseMod(i string) (Mod, error) {
 	s := regexp.MustCompile(`#.*$`).ReplaceAllLiteralString(i, "")
-	re := regexp.MustCompile(`^mod\s+["']([a-z/_]+)['"]\s*(,\s*["'](\d\.\d(\.\d)?)["'])?$`).FindAllStringSubmatch(s, -1)
+	re := regexp.MustCompile(`^mod\s+["']([a-z/_0-9]+)['"]\s*(,\s*["'](\d\.\d(\.\d)?)["'])?$`).FindAllStringSubmatch(s, -1)
 	if len(re) > 0 {
 		n := re[0][1]
 		v := ""
@@ -198,6 +261,9 @@ func parseMod(i string) (Mod, error) {
 			v = re[0][3]
 		}
 		nn := strings.Split(n, "/")
+		if len(nn) != 2 {
+			return Mod{}, fmt.Errorf("'%v' should contain one '/'", n)
+		}
 		return Mod{name: nn[1], user: nn[0], version: v, opts: ModOpts{}}, nil
 	}
 
@@ -206,7 +272,7 @@ func parseMod(i string) (Mod, error) {
 		return Mod{name: unquote(re[0][1]), opts: parseOpts(re[0][2])}, nil
 	}
 
-	return Mod{}, fmt.Errorf("ignore %v", s)
+	return Mod{}, fmt.Errorf("cannot parse: %v", s)
 }
 
 type Res struct {
