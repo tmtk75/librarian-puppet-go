@@ -348,7 +348,7 @@ func installMod(m Mod) error {
 	if err != nil {
 		return err
 	}
-	if !isTag(m.Dest(), ver) && onlyCheckout {
+	if !isTag(m.Dest(), ver) && !onlyCheckout {
 		err = gitPull(m.Dest(), ver)
 		m.cmd = "pull"
 	}
