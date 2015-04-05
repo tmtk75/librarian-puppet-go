@@ -222,10 +222,15 @@ func parsePuppetfile(i io.Reader) ([]Mod, error) {
 		mods = append(mods, m)
 	}
 
-	incs = append(incs, mods)
+	return packMods(&incs, &mods), nil
+}
+
+// pack all mods as a slice
+func packMods(incs *[][]Mod, mods *[]Mod) []Mod {
+	all := append(*incs, *mods)
 	n2m := map[string]*Mod{}
 	result := make([]*Mod, 0)
-	for _, i := range incs {
+	for _, i := range all {
 		for _, e := range i {
 			if n2m[e.name] == nil {
 				a := e // copy
@@ -241,8 +246,7 @@ func parsePuppetfile(i io.Reader) ([]Mod, error) {
 	for i, v := range result {
 		res[i] = *v
 	}
-
-	return res, nil
+	return res
 }
 
 func isInclude(s string) string /* filename */ {
