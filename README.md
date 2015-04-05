@@ -28,6 +28,22 @@ modules
 * Check out the commit registered with a version in puppetlabs.com
   retrieving its URL of source repository using REST API. `puppet module` command is NOT used.
 
+## Extensions
+## include
+`include` directive allows you to include several Puppetfiles like this.
+```
+include "Puppetfile.common"
+include "Puppetfile.debug"
+mod 'puppetlabs/stdlib'
+```
+
+- It can be only in the head of file. You cannot put `include` after `mod` directive.
+- The latest mod is used if same module name appears. For example, next case is `1.0.0` is enabled.
+```
+mod 'puppetlabs/stdlib', '4.1.0'
+mod 'puppetlabs/stdlib', '1.0.0'
+```
+
 # Performance
 * It takes about 30 seconds in order to clone about 80 modules
   although basically cloning modules strongly depends on the network speed :grin:
