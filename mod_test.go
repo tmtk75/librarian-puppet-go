@@ -125,6 +125,17 @@ mod 'xxx/yyy', '0.0.3'
 	if !(len(mods) == 1 && mods[0].version == "0.0.3") {
 		t.Errorf("%v", mods)
 	}
+
+	mods, err = parsePuppetfile(r(`
+forge "http://forge.puppetlabs.com"
+mod 'xxx/yyy', '0.0.1'
+`))
+	if !(err == nil) {
+		t.Errorf("%v", err)
+	}
+	if !(len(mods) == 1) {
+		t.Errorf("%v", mods)
+	}
 }
 
 func TestParseMod(t *testing.T) {

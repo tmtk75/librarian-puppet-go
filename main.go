@@ -26,7 +26,7 @@ import (
 func main() {
 	app := cli.NewApp()
 	app.Name = "librarian-puppet-go"
-	app.Version = "0.2.0"
+	app.Version = "0.2.1dev"
 	app.Flags = []cli.Flag{
 		cli.BoolFlag{Name: "verbose", Usage: "Show logs verbosely"},
 	}
@@ -216,6 +216,9 @@ func parsePuppetfile(i io.Reader) ([]Mod, error) {
 
 		m, err := parseMod(s)
 		if err != nil {
+			if _, ok := (err).(Ingnorable); ok {
+				continue
+			}
 			logger.Printf("[warn] %v\n", err)
 			return mods, err
 		}
@@ -258,9 +261,20 @@ func isInclude(s string) string /* filename */ {
 	return re[0][1]
 }
 
+// Marker to ignore intentionally
+type Ingnorable struct {
+	error
+}
+
 func parseMod(i string) (Mod, error) {
 	s := regexp.MustCompile(`#.*$`).ReplaceAllLiteralString(i, "")
-	re := regexp.MustCompile(`^mod\s+["']([a-z/_0-9]+)['"]\s*(,\s*["'](\d\.\d(\.\d)?)["'])?$`).FindAllStringSubmatch(s, -1)
+
+	re := regexp.MustCompile(`\s*forge\s.*`).FindAllStringSubmatch(s, -1)
+	if len(re) > 0 {
+		return Mod{}, Ingnorable{fmt.Errorf("'%v' '/'", s)}
+	}
+
+	re = regexp.MustCompile(`^mod\s+["']([a-z/_0-9]+)['"]\s*(,\s*["'](\d\.\d(\.\d)?)["'])?$`).FindAllStringSubmatch(s, -1)
 	if len(re) > 0 {
 		n := re[0][1]
 		v := ""
