@@ -26,7 +26,7 @@ import (
 func main() {
 	app := cli.NewApp()
 	app.Name = "librarian-puppet-go"
-	app.Version = "0.2.1"
+	app.Version = "0.2.2dev"
 	app.Flags = []cli.Flag{
 		cli.BoolFlag{Name: "verbose", Usage: "Show logs verbosely"},
 	}
@@ -64,6 +64,7 @@ var flags = []cli.Flag{
 	cli.StringFlag{Name: "modulepath", Value: "modules", Usage: "Path to be for modules"},
 	cli.IntFlag{Name: "throttle", Value: 0, Usage: `Throttle number of concurrent processes.
                                 Max is number of mod, min is 1. Max is used if 0 or negative number is given.`},
+	cli.BoolFlag{Name: "force,f", Usage: "checkout with --force"},
 }
 
 func readFromFile(n string) io.ReadCloser {
@@ -80,6 +81,7 @@ func realMain(c *cli.Context, cmdName string) {
 	p := c.String("modulepath")
 	n, b := c.ArgFor("filename")
 	t := c.Int("throttle")
+	forceCheckout = c.Bool("force")
 	if b {
 		r := newReader(n)
 		defer r.Close()
@@ -96,6 +98,7 @@ func realMain(c *cli.Context, cmdName string) {
 var logger = log.New(ioutil.Discard, "", log.LstdFlags)
 var modulepath string
 var onlyCheckout bool
+var forceCheckout bool
 
 type ModOpts map[string]string
 
@@ -428,6 +431,9 @@ func gitPull(dest, ref string) error {
 func gitCheckout(dest, ref string) error {
 	if ref == "" {
 		ref = "master"
+	}
+	if forceCheckout {
+		return run(dest, "git", []string{"checkout", "--force", ref})
 	}
 	return run(dest, "git", []string{"checkout", ref})
 }
