@@ -136,6 +136,19 @@ mod 'xxx/yyy', '0.0.1'
 	if !(len(mods) == 1) {
 		t.Errorf("%v", mods)
 	}
+
+	mods, err = parsePuppetfile(r(`
+mod 'puppetlabs/stdlib', '4.11.0'
+`))
+	if !(err == nil) {
+		t.Errorf("%v", err)
+	}
+	if !(len(mods) == 1) {
+		t.Errorf("%v", mods)
+	}
+	if !(mods[0].user == "puppetlabs" && mods[0].version == "4.11.0" && mods[0].name == "stdlib") {
+		t.Errorf("%v", mods)
+	}
 }
 
 func TestParseMod(t *testing.T) {

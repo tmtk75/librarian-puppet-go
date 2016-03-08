@@ -310,6 +310,7 @@ type Res struct {
 
 func giturl(m Mod) string {
 	ep := "https://forgeapi.puppetlabs.com/v3/modules/" + m.user + "-" + m.name
+	logger.Printf("%v", ep)
 	req, err := http.NewRequest("GET", ep, nil)
 	if err != nil {
 		log.Fatalf("%v", err)
