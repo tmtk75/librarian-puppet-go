@@ -139,14 +139,18 @@ mod 'xxx/yyy', '0.0.1'
 
 	mods, err = parsePuppetfile(r(`
 mod 'puppetlabs/stdlib', '4.11.0'
+mod 'xxx/yyy', '12.345.6789'
 `))
 	if !(err == nil) {
 		t.Errorf("%v", err)
 	}
-	if !(len(mods) == 1) {
+	if !(len(mods) == 2) {
 		t.Errorf("%v", mods)
 	}
 	if !(mods[0].user == "puppetlabs" && mods[0].version == "4.11.0" && mods[0].name == "stdlib") {
+		t.Errorf("%v", mods)
+	}
+	if !(mods[1].user == "xxx" && mods[1].version == "12.345.6789" && mods[1].name == "yyy") {
 		t.Errorf("%v", mods)
 	}
 }

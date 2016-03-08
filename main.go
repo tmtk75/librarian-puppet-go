@@ -277,7 +277,7 @@ func parseMod(i string) (Mod, error) {
 		return Mod{}, Ingnorable{fmt.Errorf("'%v' '/'", s)}
 	}
 
-	re = regexp.MustCompile(`^mod\s+["']([a-z/_0-9]+)['"]\s*(,\s*["'](\d\.\d(\.\d)?)["'])?$`).FindAllStringSubmatch(s, -1)
+	re = regexp.MustCompile(`^mod\s+["']([a-z/_0-9]+)['"]\s*(,\s*["'](\d+\.\d+(\.\d+)?)["'])?$`).FindAllStringSubmatch(s, -1)
 	if len(re) > 0 {
 		n := re[0][1]
 		v := ""
