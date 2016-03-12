@@ -1,0 +1,10 @@
+hash: 1afff72730822cb8114db54d7e23cf4eb646051646e7f0a00a7b4adcde339fdb
+updated: 2016-03-13T00:03:29.20231341+09:00
+imports:
+- name: github.com/tmtk75/cli
+  version: ec3703a9dc1c48a880308ddc644a0f98aa6c4032
+- name: golang.org/x/crypto
+  version: de93d05161db39bcbd84d3da2e54c4a18f37f0b1
+  subpackages:
+  - ssh/terminal
+devImports: []

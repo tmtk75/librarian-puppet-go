@@ -1,4 +1,5 @@
 .*.swp
 librarian-puppet-go
 pkg
+vendor
 
