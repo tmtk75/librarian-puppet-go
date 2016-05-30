@@ -26,7 +26,7 @@ import (
 func main() {
 	app := cli.NewApp()
 	app.Name = "librarian-puppet-go"
-	app.Version = "0.2.2"
+	app.Version = "0.3.0dev"
 	app.Flags = []cli.Flag{
 		cli.BoolFlag{Name: "verbose", Usage: "Show logs verbosely"},
 	}
@@ -56,12 +56,47 @@ func main() {
 				realMain(c, "checkout")
 			},
 		},
+		cli.Command{
+			Name:        "diff",
+			Usage:       "Compare two files with local branches",
+			Args:        "<file-a> <file-b>",
+			Description: `e.g) diff Puppetfile.staging Puppetfile.development`,
+			Flags: []cli.Flag{
+				modulepathOpt,
+				includesOpt,
+			},
+			Action: func(c *cli.Context) {
+				a, _ := c.ArgFor("file-a")
+				b, _ := c.ArgFor("file-b")
+				Diff(c, a, b)
+			},
+		},
+		cli.Command{
+			Name:        "release",
+			Usage:       "Print git commands to release",
+			Args:        "<file-a> <file-b>",
+			Description: `e.g) release Puppetfile.staging Puppetfile.development`,
+			Flags: []cli.Flag{
+				modulepathOpt,
+				includesOpt,
+			},
+			Action: func(c *cli.Context) {
+				a, _ := c.ArgFor("file-a")
+				b, _ := c.ArgFor("file-b")
+				Release(c, a, b)
+			},
+		},
 	}
 	app.Run(os.Args)
 }
 
+var (
+	modulepathOpt = cli.StringFlag{Name: "modulepath", Value: "modules", Usage: "Path to be for modules"}
+	includesOpt   = cli.StringFlag{Name: "includes", Value: ".*", Usage: "Regexp pattern to include"}
+)
+
 var flags = []cli.Flag{
-	cli.StringFlag{Name: "modulepath", Value: "modules", Usage: "Path to be for modules"},
+	modulepathOpt,
 	cli.IntFlag{Name: "throttle", Value: 0, Usage: `Throttle number of concurrent processes.
                                 Max is number of mod, min is 1. Max is used if 0 or negative number is given.`},
 	cli.BoolFlag{Name: "force,f", Usage: "checkout with --force"},
@@ -440,7 +475,6 @@ func gitCheckout(dest, ref string) error {
 }
 
 func run(wd, s string, args []string) error {
-	//logger.Printf("[debug] %v %v\n", s, args)
 	cmd := exec.Command(s, args...)
 	cmd.Dir = wd
 	//cmd.Stdout = os.Stdout
