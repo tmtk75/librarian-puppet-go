@@ -57,6 +57,20 @@ func main() {
 			},
 		},
 		cli.Command{
+			Name:        "norm",
+			Usage:       "Normalize a Puppetfile",
+			Args:        "<file>",
+			Description: `e.g) norm Puppetfile`,
+			Flags: []cli.Flag{
+				modulepathOpt,
+				includesOpt,
+			},
+			Action: func(c *cli.Context) {
+				a, _ := c.ArgFor("file")
+				normalize(c, a)
+			},
+		},
+		cli.Command{
 			Name:        "diff",
 			Usage:       "Compare two files with local branches",
 			Args:        "<file-a> <file-b>",
@@ -72,7 +86,7 @@ func main() {
 			},
 		},
 		cli.Command{
-			Name:        "release",
+			Name:        "git-push",
 			Usage:       "Print git commands to release",
 			Args:        "<file-a> <file-b>",
 			Description: `e.g) release Puppetfile.staging Puppetfile.development`,
@@ -83,7 +97,22 @@ func main() {
 			Action: func(c *cli.Context) {
 				a, _ := c.ArgFor("file-a")
 				b, _ := c.ArgFor("file-b")
-				Release(c, a, b)
+				printGitPush(c, a, b)
+			},
+		},
+		cli.Command{
+			Name:        "bump-up",
+			Usage:       "Print bumped-up Puppetfile based on file-a",
+			Args:        "<file-a> <file-b>",
+			Description: `e.g) bump-up Puppetfile.staging Puppetfile.development`,
+			Flags: []cli.Flag{
+				modulepathOpt,
+				includesOpt,
+			},
+			Action: func(c *cli.Context) {
+				a, _ := c.ArgFor("file-a")
+				b, _ := c.ArgFor("file-b")
+				bumpUp(c, a, b)
 			},
 		},
 	}
@@ -162,6 +191,21 @@ func (m *Mod) Replace(e *Mod) {
 	for k, v := range e.opts {
 		m.opts[k] = v
 	}
+}
+
+func (m Mod) Format() string {
+	if m.opts["git"] == "" && m.opts["ref"] == "" {
+		if m.user != "" {
+			if m.version != "" {
+				return fmt.Sprintf("mod '%s/%s', '%s'", m.user, m.name, m.version)
+			} else {
+				return fmt.Sprintf("mod '%s/%s'", m.user, m.name)
+			}
+		} else {
+			return fmt.Sprintf("mod '%s', '%s'", m.name, m.version)
+		}
+	}
+	return fmt.Sprintf("mod '%s', :git => '%s', :ref => '%s'", m.name, m.opts["git"], m.opts["ref"])
 }
 
 func install(mpath string, src io.Reader, throttle int) {

@@ -36,10 +36,12 @@ func run2(w io.Writer, wd, s string, args []string) {
 	}
 }
 
+const releaseBranchPattern = `release/0.([0-9]+)`
+
 func increment(s string) (string, error) {
-	re := regexp.MustCompile(`release/0.([0-9]+)`).FindAllStringSubmatch(s, -1)
+	re := regexp.MustCompile(releaseBranchPattern).FindAllStringSubmatch(s, -1)
 	if len(re) == 0 {
-		return "", fmt.Errorf("%v didn't match", s)
+		return "", fmt.Errorf("%v didn't match '%v'", s, releaseBranchPattern)
 	}
 	minor := re[0][1]
 	v, err := strconv.Atoi(minor)
@@ -49,17 +51,65 @@ func increment(s string) (string, error) {
 	return fmt.Sprintf("release/0.%d", v+1), nil
 }
 
-func Release(c *cli.Context, a, b string) {
+func normalize(c *cli.Context, a string) {
+	modulepath = c.String("modulepath")
+	mods := parse(a)
+	for _, m := range mods {
+		fmt.Println(m.Format())
+	}
+}
+
+func bumpUp(c *cli.Context, a, b string) {
+	modulepath = c.String("modulepath")
+
+	am := parse(a)
+	bm := parse(b)
+
+	for _, n := range bm {
+		m, err := findModIn(am, n)
+		if err != nil {
+			fmt.Println(n.Format())
+			continue
+		}
+		aref := m.opts["ref"]
+		bref := n.opts["ref"]
+		if aref == "" || bref == "" {
+			fmt.Println(n.Format())
+			continue
+		}
+		d := gitDiff(n.Dest(), aref, bref)
+		if d != "" {
+			p := Mod{name: n.name, version: n.version, opts: map[string]string{"git": n.opts["git"], "ref": m.opts["ref"]}}
+			fmt.Println(p.Format())
+		} else {
+			newref, err := increment(m.opts["ref"])
+			if err != nil {
+				log.Printf("WARN: %v for %v\n", err, n.name)
+				fmt.Println(n.Format())
+				continue
+			}
+			p := Mod{name: n.name, version: n.version, opts: map[string]string{"git": n.opts["git"], "ref": newref}}
+			fmt.Println(p.Format())
+		}
+	}
+}
+
+func gitDiff(wd, aref, bref string) string {
+	buf := bytes.NewBuffer([]byte{})
+	w := bufio.NewWriter(buf)
+	run2(w, wd, "git", []string{"--no-pager", "diff", "-w", aref, bref})
+	return buf.String()
+}
+
+func printGitPush(c *cli.Context, a, b string) {
 	diff(c, a, b, func(m, n Mod, aref, bref string) {
-		buf := bytes.NewBuffer([]byte{})
-		w := bufio.NewWriter(buf)
-		run2(w, n.Dest(), "git", []string{"--no-pager", "diff", "-w", aref, bref})
-		if buf.String() == "" {
+		d := gitDiff(n.Dest(), aref, bref)
+		if d == "" {
 			return
 		}
 		v, err := increment(aref)
 		if err != nil {
-			log.Printf("WARN: %v\n", err)
+			log.Printf("WARN: %v for %v\n", err, m.name)
 			return
 		}
 		fmt.Printf("(cd %v; git push origin %v %v)\n", n.Dest(), bref, v)
@@ -74,45 +124,44 @@ func Diff(c *cli.Context, a, b string) {
 	})
 }
 
+func parse(f string) []Mod {
+	ar := newReader(f)
+	mods, err := parsePuppetfile(ar)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	return mods
+}
+
 func diff(c *cli.Context, a, b string, f DiffFunc) {
 	modulepath = c.String("modulepath")
 
-	ar := newReader(a)
-	am, err := parsePuppetfile(ar)
-	if err != nil {
-		log.Fatalln(err)
-		return
-	}
-
-	br := newReader(b)
-	bm, err := parsePuppetfile(br)
-	if err != nil {
-		log.Fatalln(err)
-		return
-	}
+	am := parse(a)
+	bm := parse(b)
 
 	re, err := regexp.Compile(c.String("includes"))
 	if err != nil {
 		log.Fatalln(err)
 		return
 	}
-	for _, m := range bm {
-		if !re.MatchString(m.name) {
+
+	for _, n := range bm {
+		if !re.MatchString(n.name) {
 			continue
 		}
-		n, err := findModIn(am, m)
+		m, err := findModIn(am, n)
 		if err != nil {
 			log.Printf("WARN: %v in %s\n", err, a)
 			continue
 		}
-		bref := m.opts["ref"]
+		bref := n.opts["ref"]
 		if bref == "" {
 			continue
 		}
-		aref := n.opts["ref"]
+		aref := m.opts["ref"]
 		if aref == "" {
 			continue
 		}
-		f(m, n, aref, bref)
+		f(m, n, m.opts["ref"], n.opts["ref"])
 	}
 }
