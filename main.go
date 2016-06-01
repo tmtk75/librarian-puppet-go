@@ -57,24 +57,31 @@ func main() {
 			},
 		},
 		cli.Command{
-			Name:        "norm",
-			Usage:       "Normalize a Puppetfile",
-			Args:        "<file>",
-			Description: `e.g) norm Puppetfile`,
+			Name:  "format",
+			Usage: "Normalize a Puppetfile",
+			Args:  "<file>",
+			Description: `Format a PUppetfile by removing comments/blank lines, good whitespacing,
+   and sorting with mod name.
+
+   e.g) norm Puppetfile`,
 			Flags: []cli.Flag{
 				modulepathOpt,
 				includesOpt,
 			},
 			Action: func(c *cli.Context) {
 				a, _ := c.ArgFor("file")
-				normalize(c, a)
+				format(c, a)
 			},
 		},
 		cli.Command{
-			Name:        "diff",
-			Usage:       "Compare two files with local branches",
-			Args:        "<file-a> <file-b>",
-			Description: `e.g) diff Puppetfile.staging Puppetfile.development`,
+			Name:  "diff",
+			Usage: "Compare two files with local branches",
+			Args:  "<file-a> <file-b>",
+			Description: `Compare two files with local branches which are chekced out.
+   You need to check out local branches to be used beforehand.
+   To do that, 'install' command can be used.
+
+   e.g) diff Puppetfile.staging Puppetfile.development`,
 			Flags: []cli.Flag{
 				modulepathOpt,
 				includesOpt,
@@ -93,6 +100,8 @@ func main() {
 			Flags: []cli.Flag{
 				modulepathOpt,
 				includesOpt,
+				relBranchOpt,
+				remoteNameOpt,
 			},
 			Action: func(c *cli.Context) {
 				a, _ := c.ArgFor("file-a")
@@ -108,6 +117,7 @@ func main() {
 			Flags: []cli.Flag{
 				modulepathOpt,
 				includesOpt,
+				relBranchOpt,
 			},
 			Action: func(c *cli.Context) {
 				a, _ := c.ArgFor("file-a")
@@ -122,6 +132,8 @@ func main() {
 var (
 	modulepathOpt = cli.StringFlag{Name: "modulepath", Value: "modules", Usage: "Path to be for modules"}
 	includesOpt   = cli.StringFlag{Name: "includes", Value: ".*", Usage: "Regexp pattern to include"}
+	relBranchOpt  = cli.StringFlag{Name: "initial-release-branch", Value: "release/0.1", Usage: "Initial release branch"}
+	remoteNameOpt = cli.StringFlag{Name: "remote-name", Value: "origin", Usage: "Remote name"}
 )
 
 var flags = []cli.Flag{
