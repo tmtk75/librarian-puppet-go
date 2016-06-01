@@ -150,7 +150,10 @@ func printGitPush(c *cli.Context, a, b string) {
 			log.Printf("WARN: %v for %v\n", err, m.name)
 			newref = c.String("initial-release-branch")
 		}
-		oldref := gitLog(n.Dest(), bref)
+		oldref := bref
+		if c.Bool("use-sha1") {
+			oldref = gitLog(n.Dest(), bref)
+		}
 		fmt.Printf("(cd %v; git push %v %v %v)\n", remote, n.Dest(), oldref, newref)
 	})
 }

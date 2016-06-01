@@ -102,6 +102,7 @@ func main() {
 				includesOpt,
 				relBranchOpt,
 				remoteNameOpt,
+				useSha1Opt,
 			},
 			Action: func(c *cli.Context) {
 				a, _ := c.ArgFor("file-a")
@@ -134,6 +135,7 @@ var (
 	includesOpt   = cli.StringFlag{Name: "includes", Value: ".*", Usage: "Regexp pattern to include"}
 	relBranchOpt  = cli.StringFlag{Name: "initial-release-branch", Value: "release/0.1", Usage: "Initial release branch"}
 	remoteNameOpt = cli.StringFlag{Name: "remote-name", Value: "origin", Usage: "Remote name"}
+	useSha1Opt    = cli.BoolFlag{Name: "use-sha1", Usage: "Remote name"}
 )
 
 var flags = []cli.Flag{
