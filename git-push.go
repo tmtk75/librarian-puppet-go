@@ -26,7 +26,7 @@ func printGitPush(c *cli.Context, a, b string) {
 		if c.Bool("use-sha1") {
 			oldref = gitLog(n.Dest(), bref)
 		}
-		fmt.Printf("(cd %v; git push %v %v %v)\n", remote, n.Dest(), oldref, newref)
+		fmt.Printf("(cd %v; git push %v %v %v)\n", n.Dest(), remote, oldref, newref)
 	})
 }
 
