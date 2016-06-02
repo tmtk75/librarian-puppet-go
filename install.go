@@ -8,11 +8,9 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"regexp"
 	"sync"
-	"syscall"
 
 	"golang.org/x/crypto/ssh/terminal"
 
@@ -103,21 +101,6 @@ func install(mpath string, src io.Reader, throttle int) {
 	if len(failed) > 0 {
 		os.Exit(1)
 	}
-}
-
-func isTag(dest, tag string) bool {
-	cmd := exec.Command("git", "show-ref", "-q", "--verify", "refs/tags/"+tag)
-	cmd.Dir = dest
-	err := cmd.Run()
-	if exiterr, ok := err.(*exec.ExitError); ok {
-		if status, ok := exiterr.Sys().(syscall.WaitStatus); ok {
-			return status.ExitStatus() == 0
-		}
-	}
-	if err != nil {
-		log.Fatalf("[error] %v\t%v\t%v\n", err, dest, tag)
-	}
-	return true
 }
 
 func installMod(m Mod) error {

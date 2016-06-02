@@ -11,7 +11,7 @@ import (
 func CliMain() {
 	app := cli.NewApp()
 	app.Name = "librarian-puppet-go"
-	app.Version = "0.3.0"
+	app.Version = "0.3.1dev"
 	app.Flags = []cli.Flag{
 		cli.BoolFlag{Name: "verbose", Usage: "Show logs verbosely"},
 	}
@@ -24,7 +24,7 @@ func CliMain() {
 	app.Commands = []cli.Command{
 		cli.Command{
 			Name:  "install",
-			Usage: "Install modules with a Puppetfile given thru stdin",
+			Usage: "Install mnodules with a Puppetfile given thru stdin",
 			Args:  "[filename]",
 			Flags: flags,
 			Action: func(c *cli.Context) {
@@ -51,7 +51,7 @@ func CliMain() {
    e.g) norm Puppetfile`,
 			Flags: []cli.Flag{
 				modulepathOpt,
-				includesOpt,
+				cli.BoolFlag{Name: "overwrite,w", Usage: "Overwrite given file"},
 			},
 			Action: func(c *cli.Context) {
 				a, _ := c.ArgFor("file")
@@ -69,7 +69,6 @@ func CliMain() {
    e.g) diff Puppetfile.staging Puppetfile.development`,
 			Flags: []cli.Flag{
 				modulepathOpt,
-				includesOpt,
 			},
 			Action: func(c *cli.Context) {
 				a, _ := c.ArgFor("file-a")
@@ -84,7 +83,6 @@ func CliMain() {
 			Description: `e.g) release Puppetfile.staging Puppetfile.development`,
 			Flags: []cli.Flag{
 				modulepathOpt,
-				includesOpt,
 				relBranchOpt,
 				remoteNameOpt,
 				cli.BoolFlag{Name: "use-sha1", Usage: "Use SHA1 instead of branch name"},
@@ -92,7 +90,7 @@ func CliMain() {
 			Action: func(c *cli.Context) {
 				a, _ := c.ArgFor("file-a")
 				b, _ := c.ArgFor("file-b")
-				printGitPush(c, a, b)
+				PrintGitPushCmds(c, a, b)
 			},
 		},
 		cli.Command{
@@ -102,7 +100,6 @@ func CliMain() {
 			Description: `e.g) bump-up Puppetfile.staging Puppetfile.development`,
 			Flags: []cli.Flag{
 				modulepathOpt,
-				includesOpt,
 				relBranchOpt,
 			},
 			Action: func(c *cli.Context) {
@@ -118,7 +115,6 @@ func CliMain() {
 
 var (
 	modulepathOpt = cli.StringFlag{Name: "modulepath", Value: "modules", Usage: "Path to be for modules"}
-	includesOpt   = cli.StringFlag{Name: "includes", Value: ".*", Usage: "Regexp pattern to include"}
 	relBranchOpt  = cli.StringFlag{Name: "initial-release-branch", Value: "release/0.1", Usage: "Initial release branch"}
 	remoteNameOpt = cli.StringFlag{Name: "remote-name", Value: "origin", Usage: "Remote name"}
 )

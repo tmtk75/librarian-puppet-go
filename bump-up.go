@@ -21,7 +21,7 @@ func bumpUp(c *cli.Context, a, b string) {
 func bumpUpMod(n Mod, mods []Mod, rel, filename string, diff func(wd, a, b string) string) string {
 	m, err := findModIn(mods, n)
 	if err != nil {
-		log.Printf("INFO: %v in %v. old one is used\n", err, filename)
+		logger.Printf("INFO: %v in %v. old one is used\n", err, filename)
 		if n.opts["ref"] != "" {
 			opts := map[string]string{"git": n.opts["git"], "ref": rel}
 			p := Mod{name: n.name, version: n.version, opts: opts, user: n.user}

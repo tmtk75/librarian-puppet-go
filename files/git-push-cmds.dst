@@ -1,0 +1,3 @@
+mod 'foo', :ref => 'a-sha1-abcd1234'
+mod 'bar', :ref => 'a-topic'
+mod 'fiz', :ref => 'a-sha1-abcd1234'

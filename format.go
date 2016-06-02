@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"log"
+	"os"
 	"sort"
 	"strings"
 
@@ -27,7 +28,17 @@ func (v Mods) Less(i, j int) bool {
 
 func Format(c *cli.Context, a string) {
 	mods := parse(a)
-	fmt.Println(format(mods))
+	s := format(mods)
+	if c.Bool("overwrite") {
+		f, err := os.Open(a)
+		defer f.Close()
+		if err != nil {
+			log.Fatalln(err)
+		}
+		f.Write([]byte(s))
+	} else {
+		fmt.Println(s)
+	}
 }
 
 func format(mods []Mod) string {

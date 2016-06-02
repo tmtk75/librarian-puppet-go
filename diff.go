@@ -19,8 +19,6 @@ func findModIn(mods []Mod, m Mod) (Mod, error) {
 	return Mod{}, fmt.Errorf("missing %s", m.name)
 }
 
-type DiffFunc func(m, n Mod, aref, bref string)
-
 const releaseBranchPattern = `release/0.([0-9]+)`
 
 func increment(s string) (string, error) {
@@ -37,9 +35,9 @@ func increment(s string) (string, error) {
 }
 
 func Diff(c *cli.Context, a, b string) {
-	diff(c, a, b, func(m, n Mod, aref, bref string) {
-		fmt.Println(n.Dest(), aref, bref)
-		run2(os.Stdout, n.Dest(), "git", []string{"--no-pager", "diff", "-w", aref, bref})
+	diff(c, a, b, func(oldm, newm Mod, oldref, newref string) {
+		fmt.Println(newm.Dest(), oldref, newref)
+		run2(os.Stdout, newm.Dest(), "git", []string{"--no-pager", "diff", "-w", oldref, newref})
 	})
 }
 
@@ -52,35 +50,30 @@ func parse(f string) []Mod {
 	return mods
 }
 
-func diff(c *cli.Context, a, b string, f DiffFunc) {
+type DiffFunc func(oldm, newm Mod, oldref, newref string)
+
+func diff(c *cli.Context, oldfile, newfile string, f DiffFunc) {
 	modulepath = c.String("modulepath")
 
-	am := parse(a)
-	bm := parse(b)
+	oldmods := parse(oldfile)
+	newmods := parse(newfile)
 
-	re, err := regexp.Compile(c.String("includes"))
-	if err != nil {
-		log.Fatalln(err)
-		return
-	}
-
-	for _, n := range bm {
-		if !re.MatchString(n.name) {
-			continue
-		}
-		m, err := findModIn(am, n)
+	for _, newm := range newmods {
+		oldm, err := findModIn(oldmods, newm)
 		if err != nil {
-			log.Printf("WARN: %v in %s\n", err, a)
+			log.Printf("INFO: %v in %s\n", err, oldfile)
 			continue
 		}
-		bref := n.opts["ref"]
-		if bref == "" {
+		newref := newm.opts["ref"]
+		if newref == "" {
+			logger.Printf("INFO: missing ref in %v of %v", newm.name, newfile)
 			continue
 		}
-		aref := m.opts["ref"]
-		if aref == "" {
+		oldref := oldm.opts["ref"]
+		if oldref == "" {
+			logger.Printf("INFO: missing ref in %v of %v", oldm.name, oldfile)
 			continue
 		}
-		f(m, n, m.opts["ref"], n.opts["ref"])
+		f(oldm, newm, oldref, newref)
 	}
 }

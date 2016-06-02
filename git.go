@@ -7,8 +7,52 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"strings"
+	"syscall"
 	"time"
 )
+
+func isCommit(dest, sha1 string) bool {
+	cmd := exec.Command("git", "show", "-q", sha1)
+	a := checkExitCode(dest, cmd)
+	b := !isBranch(dest, sha1)
+	c := !isTag(dest, sha1)
+	return a && b && c
+}
+
+func isBranch(dest, name string) bool {
+	return isRef(dest, "heads", name)
+}
+
+func isTag(dest, tag string) bool {
+	return isRef(dest, "tags", tag)
+}
+
+func isRef(dest, kind, tag string) bool {
+	cmd := exec.Command("git", "show-ref", "-q", "--verify", "refs/"+kind+"/"+tag)
+	return checkExitCode(dest, cmd)
+}
+
+func checkExitCode(dest string, cmd *exec.Cmd) bool {
+	cmd.Dir = dest
+	err := cmd.Run()
+	if exiterr, ok := err.(*exec.ExitError); ok {
+		if status, ok := exiterr.Sys().(syscall.WaitStatus); ok {
+			return status.ExitStatus() == 0
+		}
+	}
+	if err != nil {
+		log.Fatalf("[error] %v\t%v\t%v\n", err, dest)
+	}
+	return true
+}
+
+func gitSha1(wd, ref string) string {
+	buf := bytes.NewBuffer([]byte{})
+	w := bufio.NewWriter(buf)
+	run2(w, wd, "git", []string{"log", ref, "-s", "--format=%H", "-n1"})
+	return strings.TrimSpace(buf.String())
+}
 
 func gitClone(url, dest string) error {
 	return run("", "git", []string{"clone", url, dest})
