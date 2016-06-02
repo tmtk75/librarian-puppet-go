@@ -11,7 +11,7 @@ import (
 func CliMain() {
 	app := cli.NewApp()
 	app.Name = "librarian-puppet-go"
-	app.Version = "0.3.0dev"
+	app.Version = "0.3.0"
 	app.Flags = []cli.Flag{
 		cli.BoolFlag{Name: "verbose", Usage: "Show logs verbosely"},
 	}
