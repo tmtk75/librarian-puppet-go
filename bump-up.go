@@ -3,18 +3,14 @@ package librarianpuppetgo
 import (
 	"fmt"
 	"log"
-
-	"github.com/tmtk75/cli"
 )
 
-func bumpUp(c *cli.Context, a, b string) {
-	modulepath = c.String("modulepath")
-
+func bumpUp(a, b string, init string) {
 	am := parse(a)
 	bm := parse(b)
 
 	for _, n := range bm {
-		fmt.Println(bumpUpMod(n, am, c.String("initial-release-branch"), a, gitDiff))
+		fmt.Println(bumpUpMod(n, am, init, a, gitDiff))
 	}
 }
 

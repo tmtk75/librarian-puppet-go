@@ -6,6 +6,14 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TestModFullname(t *testing.T) {
+	mods, _ := parsePuppetfile(r(`mod 'foo', :ref => '0.1.0'`))
+	assert.Equal(t, "foo", mods[0].Fullname())
+
+	mods, _ = parsePuppetfile(r(`mod 'bar/foo', '0.1.0'`))
+	assert.Equal(t, "bar/foo", mods[0].Fullname())
+}
+
 func TestModFormat(t *testing.T) {
 	mods, _ := parsePuppetfile(r(`mod 'foo', :git => 'user@github.com/foo/bar', :ref => 'fix/a-bug'`))
 	assert.Equal(t, "mod 'foo', :git => 'user@github.com/foo/bar', :ref => 'fix/a-bug'", mods[0].Format())

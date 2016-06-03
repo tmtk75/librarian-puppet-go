@@ -7,8 +7,6 @@ import (
 	"os"
 	"sort"
 	"strings"
-
-	"github.com/tmtk75/cli"
 )
 
 type Mods []Mod
@@ -22,15 +20,15 @@ func (v Mods) Swap(i, j int) {
 }
 
 func (v Mods) Less(i, j int) bool {
-	e := strings.Compare(v[i].name, v[j].name)
+	e := strings.Compare(v[i].Fullname(), v[j].Fullname())
 	return e < 0
 }
 
-func Format(c *cli.Context, a string) {
+func Format(a string, overwrite bool) {
 	mods := parse(a)
 	s := format(mods)
-	if c.Bool("overwrite") {
-		f, err := os.Open(a)
+	if overwrite {
+		f, err := os.Create(a)
 		defer f.Close()
 		if err != nil {
 			log.Fatalln(err)

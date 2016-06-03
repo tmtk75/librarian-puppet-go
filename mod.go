@@ -18,12 +18,19 @@ type Mod struct {
 	err     error
 }
 
+func (m Mod) Fullname() string {
+	if m.user != "" {
+		return m.user + "/" + m.name
+	}
+	return m.name
+}
+
 func (m Mod) String() string {
 	return fmt.Sprintf("name:%v\topts:%v\tuser:%v\tversion:%v", m.name, m.opts, m.user, m.version)
 }
 
 func (m Mod) Dest() string {
-	return filepath.Join(modulepath, m.name)
+	return filepath.Join(modulePath, m.name)
 }
 
 func (m *Mod) Replace(e *Mod) {

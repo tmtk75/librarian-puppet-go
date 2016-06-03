@@ -12,6 +12,8 @@ import (
 	"time"
 )
 
+var modulePath string = "modules"
+
 func isCommit(dest, sha1 string) bool {
 	cmd := exec.Command("git", "show", "-q", sha1)
 	a := checkExitCode(dest, cmd)
@@ -66,11 +68,11 @@ func gitPull(dest, ref string) error {
 	return run(dest, "git", []string{"pull", "origin", ref})
 }
 
-func gitCheckout(dest, ref string) error {
+func gitCheckout(dest, ref string, force bool) error {
 	if ref == "" {
 		ref = "master"
 	}
-	if forceCheckout {
+	if force {
 		return run(dest, "git", []string{"checkout", "--force", ref})
 	}
 	return run(dest, "git", []string{"checkout", ref})
@@ -110,6 +112,6 @@ func run2(w io.Writer, wd, s string, args []string) {
 	cmd.Stdout = w
 	err := cmd.Run()
 	if err != nil {
-		log.Fatalln(err)
+		//log.Fatalln(err)
 	}
 }

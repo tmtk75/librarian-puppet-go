@@ -1,6 +1,7 @@
 package librarianpuppetgo
 
 import (
+	"bytes"
 	"strings"
 	"testing"
 
@@ -28,12 +29,14 @@ func newGit() *Git {
 			}
 			return ""
 		},
+		Diff: func(wd, srcref, dstref string) string {
+			return "a"
+		},
 	}
 
 }
 
 func TestGitPushCmd(t *testing.T) {
-	modulepath = "modules"
 	git := newGit()
 	//
 	s, err := git.PushCmd(
@@ -76,13 +79,39 @@ func TestGitPushCmd(t *testing.T) {
 	assert.NotNil(t, err)
 }
 
-func TestGitPushCmds(t *testing.T) {
-	modulepath = "modules"
+func TestGitPushCmd2(t *testing.T) {
 	git := newGit()
-	assert.Equal(t, `# foo is missing in ./files/empty`, git.PushCmds("./files/git-push.src", "./files/empty"))
+	//
+	a, _ := parsePuppetfile(r(`mod 'puppetlabs/foo', '3.0.3'`))
+	b, _ := parsePuppetfile(r(`mod 'puppetlabs/foo', '3.0.3'`))
+	s, err := git.PushCmd(a[0], b[0])
+	assert.Nil(t, err)
+	assert.Equal(t, "# puppetlabs/foo 3.0.3 doesn't have :ref", s)
+
+	//
+	a, _ = parsePuppetfile(r(`mod 'puppetlabs/bar'`))
+	b, _ = parsePuppetfile(r(`mod 'puppetlabs/bar'`))
+	s, err = git.PushCmd(a[0], b[0])
+	assert.Nil(t, err)
+	assert.Equal(t, "# puppetlabs/bar doesn't have :ref", s)
+}
+
+func TestGitPushCmds(t *testing.T) {
+	git := newGit()
+
+	//
+	buf := bytes.NewBuffer([]byte{})
+	git.Writer = buf
+	git.PushCmds("./files/git-push.src", "./files/empty")
+	assert.Equal(t, `# foo is missing in ./files/empty`, buf.String())
+
+	//
+	buf = bytes.NewBuffer([]byte{})
+	git.Writer = buf
+	git.PushCmds("./files/git-push-cmds.src", "./files/git-push-cmds.dst")
 	assert.Equal(t, strings.TrimSpace(`
 (cd modules/foo; git branch a-sha1-abcd1234 release/0.2; git push origin release/0.2:release/0.2)
 (cd modules/bar; git branch a-topic-sha1 release/0.2; git push origin release/0.2:release/0.2)
 # modules/fiz is referred at a-sha1-abcd1234
-	`)+"\n", git.PushCmds("./files/git-push-cmds.src", "./files/git-push-cmds.dst"))
+	`)+"\n", buf.String())
 }

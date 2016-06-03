@@ -1,59 +1,75 @@
 package librarianpuppetgo
 
 import (
-	"bytes"
 	"fmt"
+	"io"
 	"log"
-
-	"github.com/tmtk75/cli"
+	"os"
 )
 
-func (g *Git) PushCmds(src, dst string) string {
+func (g *Git) PushCmds(src, dst string) {
 	srcmods := parse(src)
 	dstmods := parse(dst)
 
-	buf := bytes.NewBuffer([]byte{})
 	for _, srcm := range srcmods {
 		newm, err := findModIn(dstmods, srcm)
 		if err != nil {
-			fmt.Fprintf(buf, "# %v is missing in %v", srcm.name, dst)
+			fmt.Fprintf(g.Writer, "# %v is missing in %v", srcm.name, dst)
 			continue
+		}
+		if srcm.opts["ref"] != "" && newm.opts["ref"] != "" {
+			if g.Diff(srcm.Dest(), srcm.opts["ref"], newm.opts["ref"]) == "" {
+				continue
+			}
 		}
 		s, err := g.PushCmd(srcm, newm)
 		if err != nil {
 			log.Printf("WARN: %v\n", err)
 			continue
 		}
-		fmt.Fprintf(buf, "%s\n", s)
+		fmt.Fprintf(g.Writer, "%s\n", s)
 		logger.Printf("%v: %v", srcm.name, s)
 	}
-
-	return buf.String()
 }
 
-func PrintGitPushCmds(c *cli.Context, src, dst string) {
-	modulepath = c.String("modulepath")
-	fmt.Print(NewGit().PushCmds(src, dst))
+func PrintGitPushCmds(remote, src, dst string) {
+	g := NewGit()
+	g.Remote = remote
+	g.PushCmds(src, dst)
+	fmt.Print()
 }
 
 type Git struct {
+	Writer   io.Writer
 	Remote   string
 	IsCommit func(wd, sha1 string) bool
 	IsBranch func(wd, name string) bool
 	Sha1     func(wd, ref string) string
+	Diff     func(wd, srcref, dstref string) string
 }
 
 func NewGit() *Git {
 	return &Git{
+		Writer:   os.Stdout,
 		Remote:   "origin",
 		IsCommit: isCommit,
 		IsBranch: isBranch,
 		Sha1:     gitSha1,
+		Diff:     gitDiff,
 	}
 }
 
 func (g Git) PushCmd(oldm, newm Mod) (string, error) {
-	dstref, err := increment(oldm.opts["ref"])
+	oldref := oldm.opts["ref"]
+	if oldref == "" {
+		if oldm.version == "" {
+			return fmt.Sprintf("# %v/%v doesn't have :ref", oldm.user, oldm.name), nil
+		} else {
+			return fmt.Sprintf("# %v/%v %v doesn't have :ref", oldm.user, oldm.name, oldm.version), nil
+		}
+	}
+
+	dstref, err := increment(oldref)
 	if err != nil {
 		return fmt.Sprintf("# %v is referred at %v", newm.Dest(), newm.opts["ref"]), nil
 	}

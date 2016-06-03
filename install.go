@@ -8,13 +8,8 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"path/filepath"
 	"regexp"
 	"sync"
-
-	"golang.org/x/crypto/ssh/terminal"
-
-	"github.com/tmtk75/cli"
 )
 
 var newReader func(string) io.ReadCloser = readFromFile
@@ -27,40 +22,27 @@ func readFromFile(n string) io.ReadCloser {
 	return r
 }
 
-func realMain(c *cli.Context, cmdName string) {
-	p := c.String("modulepath")
-	n, b := c.ArgFor("filename")
-	t := c.Int("throttle")
-	forceCheckout = c.Bool("force")
-	if b {
-		r := newReader(n)
-		defer r.Close()
-		install(p, bufio.NewReader(r), t)
-	} else {
-		if !terminal.IsTerminal(int(os.Stdin.Fd())) {
-			install(p, os.Stdin, t)
-		} else {
-			cli.ShowCommandHelp(c, cmdName)
-		}
-	}
+type installCmd struct {
+	throttle      int
+	forceCheckout bool
+	onlyCheckout  bool
 }
 
-func install(mpath string, src io.Reader, throttle int) {
-	mp, err := filepath.Abs(mpath)
-	if err != nil {
-		logger.Fatalf("%v", err)
-	}
-	modulepath = mp
-	logger.Printf("modulepath: %v", modulepath)
+func (c installCmd) Main(path string) {
+	r := newReader(path)
+	defer r.Close()
+	c.install(bufio.NewReader(r))
+}
 
+func (c installCmd) install(src io.Reader) {
 	mods, err := parsePuppetfile(src)
 	if err != nil {
 		log.Fatalf("%v\n", err)
 	}
-	if throttle < 1 || len(mods) < throttle {
-		throttle = len(mods)
+	if c.throttle < 1 || len(mods) < c.throttle {
+		c.throttle = len(mods)
 	}
-	logger.Printf("mods size: %v, throttle: %v", len(mods), throttle)
+	logger.Printf("mods size: %v, throttle: %v", len(mods), c.throttle)
 
 	var wg sync.WaitGroup
 	wg.Add(len(mods))
@@ -68,11 +50,11 @@ func install(mpath string, src io.Reader, throttle int) {
 	tasks := make(chan Mod)
 	errs := make(chan Mod)
 
-	for i := 0; i < throttle; i++ {
+	for i := 0; i < c.throttle; i++ {
 		go func() {
 			for m := range tasks {
 				defer wg.Done()
-				if err := installMod(m); err != nil {
+				if err := c.installMod(m); err != nil {
 					m.err = err
 					errs <- m
 				}
@@ -103,7 +85,7 @@ func install(mpath string, src io.Reader, throttle int) {
 	}
 }
 
-func installMod(m Mod) error {
+func (c installCmd) installMod(m Mod) error {
 	if m.opts["git"] == "" {
 		m.opts["git"] = giturl(m)
 		if m.opts["git"] == "" {
@@ -118,7 +100,7 @@ func installMod(m Mod) error {
 		err = gitClone(m.opts["git"], m.Dest())
 		m.cmd = "clone"
 	} else {
-		if !onlyCheckout {
+		if !c.onlyCheckout {
 			err = gitFetch(m.Dest())
 			m.cmd = "fetch"
 		}
@@ -132,12 +114,12 @@ func installMod(m Mod) error {
 		ver = m.opts["ref"]
 	}
 
-	err = gitCheckout(m.Dest(), ver)
+	err = gitCheckout(m.Dest(), ver, c.forceCheckout)
 	m.cmd = "checkout"
 	if err != nil {
 		return err
 	}
-	if !isTag(m.Dest(), ver) && !onlyCheckout {
+	if !isTag(m.Dest(), ver) && !c.onlyCheckout {
 		err = gitPull(m.Dest(), ver)
 		m.cmd = "pull"
 	}

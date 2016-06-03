@@ -1,6 +1,3 @@
 package: github.com/tmtk75/librarian-puppet-go
 import:
-- package: github.com/tmtk75/cli
-- package: golang.org/x/crypto
-  subpackages:
-  - ssh/terminal
+- package: github.com/jawher/mow.cli

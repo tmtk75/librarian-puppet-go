@@ -6,8 +6,6 @@ import (
 	"os"
 	"regexp"
 	"strconv"
-
-	"github.com/tmtk75/cli"
 )
 
 func findModIn(mods []Mod, m Mod) (Mod, error) {
@@ -34,8 +32,8 @@ func increment(s string) (string, error) {
 	return fmt.Sprintf("release/0.%d", v+1), nil
 }
 
-func Diff(c *cli.Context, a, b string) {
-	diff(c, a, b, func(oldm, newm Mod, oldref, newref string) {
+func Diff(a, b string) {
+	diff(a, b, func(oldm, newm Mod, oldref, newref string) {
 		fmt.Println(newm.Dest(), oldref, newref)
 		run2(os.Stdout, newm.Dest(), "git", []string{"--no-pager", "diff", "-w", oldref, newref})
 	})
@@ -52,9 +50,7 @@ func parse(f string) []Mod {
 
 type DiffFunc func(oldm, newm Mod, oldref, newref string)
 
-func diff(c *cli.Context, oldfile, newfile string, f DiffFunc) {
-	modulepath = c.String("modulepath")
-
+func diff(oldfile, newfile string, f DiffFunc) {
 	oldmods := parse(oldfile)
 	newmods := parse(newfile)
 

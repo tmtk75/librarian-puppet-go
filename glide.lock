@@ -1,10 +1,6 @@
-hash: 1afff72730822cb8114db54d7e23cf4eb646051646e7f0a00a7b4adcde339fdb
-updated: 2016-03-13T00:03:29.20231341+09:00
+hash: 8764f5f35bd8469f83cb040d1da0ed441661212f5b98a01ffb331cbb102f08b4
+updated: 2016-06-04T00:01:11.095598509+09:00
 imports:
-- name: github.com/tmtk75/cli
-  version: ec3703a9dc1c48a880308ddc644a0f98aa6c4032
-- name: golang.org/x/crypto
-  version: de93d05161db39bcbd84d3da2e54c4a18f37f0b1
-  subpackages:
-  - ssh/terminal
+- name: github.com/jawher/mow.cli
+  version: 772320464101e904cd51198160eb4d489be9cc49
 devImports: []
