@@ -2,11 +2,11 @@
 	go build -o librarian-puppet-go cmd/librarian-puppet-go/main.go
 
 install:
-	go install cmd/librarian-puppet-go/main.go
+	(cd cmd/librarian-puppet-go; go install)
 
 XC_ARCH=amd64
 XC_OS=linux darwin
-version=`./librarian-puppet-go -v | sed 's/librarian-puppet-go version //g'`
+version=`./librarian-puppet-go --version`
 
 build:
 	for arch in $(XC_ARCH); do \

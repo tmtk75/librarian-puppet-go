@@ -18,7 +18,13 @@ func newGit() *Git {
 			return false
 		},
 		IsBranch: func(wd, name string) bool {
-			if name == "master" || name == "a-topic" {
+			if name == "master" || name == "a-topic" || name == "release/0.2" {
+				return true
+			}
+			return false
+		},
+		IsTag: func(wd, name string) bool {
+			if name == "v0.1.3" {
 				return true
 			}
 			return false
@@ -96,6 +102,39 @@ func TestGitPushCmd2(t *testing.T) {
 	assert.Equal(t, "# puppetlabs/bar doesn't have :ref", s)
 }
 
+func TestGitPushCmdTag(t *testing.T) {
+	git := newGit()
+	//
+	s, err := git.PushCmd(
+		Mod{name: "foo", user: "bar", opts: map[string]string{"ref": "v0.1.3"}},
+		Mod{name: "foo", user: "bar", opts: map[string]string{"ref": "release/0.2"}},
+	)
+	assert.Nil(t, err)
+	assert.Equal(t, "(cd modules/foo; git push origin release/0.2:v0.2.0)", s)
+
+	//
+	s, err = git.PushCmd(
+		Mod{name: "foo", user: "bar", opts: map[string]string{"ref": "v0.1.3"}},
+		Mod{name: "foo", user: "bar", opts: map[string]string{"ref": "a-topic"}},
+	)
+	assert.Nil(t, err)
+	assert.Equal(t, "# WARN: a-topic cannot be parsed minor version for foo", s)
+}
+
+func TestMinorVersionNumber(t *testing.T) {
+	v, err := minorVersionNumber("master")
+	assert.NotNil(t, err)
+	assert.Equal(t, -1, v)
+
+	v, err = minorVersionNumber("release/0.x")
+	assert.NotNil(t, err)
+	assert.Equal(t, -1, v)
+
+	v, err = minorVersionNumber("release/0.2")
+	assert.Nil(t, err)
+	assert.Equal(t, 2, v)
+}
+
 func TestGitPushCmds(t *testing.T) {
 	git := newGit()
 
@@ -103,7 +142,7 @@ func TestGitPushCmds(t *testing.T) {
 	buf := bytes.NewBuffer([]byte{})
 	git.Writer = buf
 	git.PushCmds("./files/git-push.src", "./files/empty")
-	assert.Equal(t, `# foo is missing in ./files/empty`, buf.String())
+	assert.Equal(t, "# foo is missing in ./files/empty\n", buf.String())
 
 	//
 	buf = bytes.NewBuffer([]byte{})
