@@ -32,10 +32,11 @@ func increment(s string) (string, error) {
 	return fmt.Sprintf("release/0.%d", v+1), nil
 }
 
-func Diff(a, b string) {
+func Diff(a, b string, dirs []string) {
 	diff(a, b, func(oldm, newm Mod, oldref, newref string) {
 		fmt.Println(newm.Dest(), oldref, newref)
-		run2(os.Stdout, newm.Dest(), "git", []string{"--no-pager", "diff", "-w", oldref, newref})
+		args := append([]string{"--no-pager", "diff", "-w", oldref, newref, "--"}, dirs...)
+		run2(os.Stdout, newm.Dest(), "git", args)
 	})
 }
 

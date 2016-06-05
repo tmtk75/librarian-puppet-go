@@ -78,12 +78,14 @@ e.g) norm puppetfile`
 You need to check out local branches to be used beforehand.
 To do that, 'install' command can be used.
 
-e.g) diff Puppetfile.staging Puppetfile.development`
+e.g) diff Puppetfile.staging Puppetfile.development
+     diff Puppetfile.production Puppetfile.staging manifests templates`
 			a := c.String(cli.StringArg{Name: "SRC", Desc: "Source puppetfile"})
 			b := c.String(cli.StringArg{Name: "DST", Desc: "Destination puppetfile"})
-			c.Spec = "SRC DST"
+			d := c.Strings(cli.StringsArg{Name: "DIRS", Desc: "Directories to be compared"})
+			c.Spec = "SRC DST [DIRS...]"
 			c.Action = func() {
-				Diff(*a, *b)
+				Diff(*a, *b, *d)
 			}
 		},
 	)
