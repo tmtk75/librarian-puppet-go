@@ -25,7 +25,7 @@ func CliMain() {
 		fileArg     = cli.StringArg{Name: "FILE", Desc: "A puppetfile path"}
 		throttleOpt = cli.IntOpt{Name: "throttle", Value: 0, EnvVar: "LP_THROTTLE",
 			Desc: `Throttle number of concurrent processes.
-                     Max is number of mod, min is 1. Max is used if 0 or negative number is given.`}
+                 Max is number of mod, min is 1. Max is used if 0 or negative number is given.`}
 		forceOpt = cli.BoolOpt{Name: "force f", Desc: "checkout with --force"}
 	)
 	f := func(b bool) func(c *cli.Cmd) {
