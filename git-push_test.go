@@ -24,7 +24,7 @@ func newGit() *Git {
 			return false
 		},
 		IsTag: func(wd, name string) bool {
-			if name == "v0.1.3" {
+			if name == "v0.1.3" || name == "v0.2.3" {
 				return true
 			}
 			return false
@@ -119,6 +119,26 @@ func TestGitPushCmdTag(t *testing.T) {
 	)
 	assert.Nil(t, err)
 	assert.Equal(t, "# WARN: a-topic cannot be parsed minor version for foo", s)
+
+	//
+	git = newGit()
+	git.Diff = func(wd, srcref, dstref string) string { return "" }
+	s, err = git.PushCmd(
+		Mod{name: "foo", user: "bar", opts: map[string]string{"ref": "v0.2.3"}},
+		Mod{name: "foo", user: "bar", opts: map[string]string{"ref": "release/0.2"}},
+	)
+	assert.Nil(t, err)
+	assert.Equal(t, "# INFO: no diff for foo between v0.2.3 and release/0.2", s)
+
+	//
+	git = newGit()
+	git.Diff = func(wd, srcref, dstref string) string { return "a" }
+	s, err = git.PushCmd(
+		Mod{name: "foo", user: "bar", opts: map[string]string{"ref": "v0.2.3"}},
+		Mod{name: "foo", user: "bar", opts: map[string]string{"ref": "release/0.2"}},
+	)
+	assert.Nil(t, err)
+	assert.Equal(t, "(cd modules/foo; git push origin release/0.2:v0.2.4)", s)
 }
 
 func TestMinorVersionNumber(t *testing.T) {
@@ -133,6 +153,16 @@ func TestMinorVersionNumber(t *testing.T) {
 	v, err = minorVersionNumber("release/0.2")
 	assert.Nil(t, err)
 	assert.Equal(t, 2, v)
+}
+
+func TestSemanticVersion(t *testing.T) {
+	ma, mi, tri, _ := semanticVersion("v10.200.3000")
+	assert.Equal(t, 10, ma)
+	assert.Equal(t, 200, mi)
+	assert.Equal(t, 3000, tri)
+
+	_, _, _, err := semanticVersion("x.y.z")
+	assert.NotNil(t, err)
 }
 
 func TestGitPushCmds(t *testing.T) {
