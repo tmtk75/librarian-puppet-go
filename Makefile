@@ -6,7 +6,7 @@ install:
 
 XC_ARCH=amd64
 XC_OS=linux darwin
-version=`./librarian-puppet-go --version`
+version=`./librarian-puppet-go --version 2>&1`
 
 build:
 	for arch in $(XC_ARCH); do \
