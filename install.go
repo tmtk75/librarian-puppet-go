@@ -41,6 +41,7 @@ func (c installCmd) install(src io.Reader) {
 		log.Fatalf("%v\n", err)
 	}
 
+	logger.Printf("includes: '%v'", c.includes)
 	re, err := regexp.Compile(c.includes)
 	if err != nil {
 		log.Fatalf("%v\n", err)
