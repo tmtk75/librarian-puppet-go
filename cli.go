@@ -26,19 +26,22 @@ func CliMain() {
 		throttleOpt = cli.IntOpt{Name: "throttle", Value: 0, EnvVar: "LP_THROTTLE",
 			Desc: `Throttle number of concurrent processes.
                  Max is number of mod, min is 1. Max is used if 0 or negative number is given.`}
-		forceOpt = cli.BoolOpt{Name: "force f", Desc: "checkout with --force"}
+		forceOpt    = cli.BoolOpt{Name: "force f", Desc: "checkout with --force"}
+		includesOpt = cli.StringOpt{Name: "includes", Value: ".*", Desc: "Specify modules to be installed"}
 	)
 	f := func(b bool) func(c *cli.Cmd) {
 		return func(c *cli.Cmd) {
 			file := c.String(fileArg)
 			throttle := c.Int(throttleOpt)
 			force := c.Bool(forceOpt)
+			includes := c.String(includesOpt)
 			c.Spec = "[OPTIONS] FILE"
 			c.Action = func() {
 				c := installCmd{
 					throttle:      *throttle,
 					forceCheckout: *force,
 					onlyCheckout:  b,
+					includes:      *includes,
 				}
 				c.Main(*file)
 			}

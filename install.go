@@ -26,6 +26,7 @@ type installCmd struct {
 	throttle      int
 	forceCheckout bool
 	onlyCheckout  bool
+	includes      string
 }
 
 func (c installCmd) Main(path string) {
@@ -35,10 +36,22 @@ func (c installCmd) Main(path string) {
 }
 
 func (c installCmd) install(src io.Reader) {
-	mods, err := parsePuppetfile(src)
+	ms, err := parsePuppetfile(src)
 	if err != nil {
 		log.Fatalf("%v\n", err)
 	}
+
+	re, err := regexp.Compile(c.includes)
+	if err != nil {
+		log.Fatalf("%v\n", err)
+	}
+	mods := make([]Mod, 0)
+	for _, e := range ms {
+		if y := re.Match([]byte(e.name)); y {
+			mods = append(mods, e)
+		}
+	}
+
 	if c.throttle < 1 || len(mods) < c.throttle {
 		c.throttle = len(mods)
 	}
