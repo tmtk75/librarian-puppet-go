@@ -161,8 +161,25 @@ func TestSemanticVersion(t *testing.T) {
 	assert.Equal(t, 200, mi)
 	assert.Equal(t, 3000, tri)
 
+	ma, mi, tri, _ = semanticVersion("10.200.3000")
+	assert.Equal(t, 10, ma)
+	assert.Equal(t, 200, mi)
+	assert.Equal(t, 3000, tri)
+
 	_, _, _, err := semanticVersion("x.y.z")
 	assert.NotNil(t, err)
+
+	x, y, z, err := semanticVersion("1.2")
+	assert.Nil(t, err)
+	assert.Equal(t, 1, x)
+	assert.Equal(t, 2, y)
+	assert.Equal(t, -1, z)
+
+	x, y, z, err = semanticVersion("v3.10")
+	assert.Nil(t, err)
+	assert.Equal(t, 3, x)
+	assert.Equal(t, 10, y)
+	assert.Equal(t, -1, z)
 }
 
 func TestGitPushCmds(t *testing.T) {

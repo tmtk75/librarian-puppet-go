@@ -118,6 +118,32 @@ e.g) diff Puppetfile.staging Puppetfile.development
 			}
 		},
 	)
+	app.Command(
+		"semver",
+		`Manage semver`,
+		func(c *cli.Cmd) {
+			c.Command(
+				"sort",
+				`Sort semver in ascending order`,
+				func(c *cli.Cmd) {
+					c.LongDesc = `Sort sever in ascending order
+
+Accepted pattern is like this.
+
+  v0.1.0
+  v0.1
+  0.1.0
+  0.1
+
+Output doesn't have "v" prefix if it has "v".
+`
+					c.Action = func() {
+						SortCmd()
+					}
+				},
+			)
+		},
+	)
 	app.Run(os.Args)
 }
 

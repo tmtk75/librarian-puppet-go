@@ -76,15 +76,22 @@ func minorVersionNumber(s string) (int, error) {
 	return v, nil
 }
 
-func semanticVersion(s string) (major, minor, trivial int, err error) {
-	p := "^v([0-9]+)\\.([0-9]+)\\.([0-9]+)$"
+func semanticVersion(s string) (major, minor, patch int, err error) {
+	p := "^v?([0-9]+)\\.([0-9]+)\\.([0-9]+)$"
 	re := regexp.MustCompile(p).FindAllStringSubmatch(s, -1)
 	if len(re) == 0 {
-		return -1, -1, -1, fmt.Errorf("%v didn't match %v", s, p)
+		q := "^v?([0-9]+)\\.([0-9]+)$"
+		re = regexp.MustCompile(q).FindAllStringSubmatch(s, -1)
+		if len(re) == 0 {
+			return -1, -1, -1, fmt.Errorf("%v didn't match %v and %v", s, p, q)
+		}
 	}
 	a, _ := strconv.Atoi(re[0][1])
 	b, _ := strconv.Atoi(re[0][2])
-	c, _ := strconv.Atoi(re[0][3])
+	c := -1
+	if len(re[0]) > 3 {
+		c, _ = strconv.Atoi(re[0][3])
+	}
 	return a, b, c, nil
 }
 
