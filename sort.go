@@ -37,20 +37,20 @@ func (v semvers) Less(i, j int) bool {
 		return true
 	} else if v[i].major > v[j].major {
 		return false
+	}
+
+	if v[i].minor < v[j].minor {
+		return true
+	} else if v[i].minor > v[j].minor {
+		return false
+	}
+
+	if v[i].patch < v[j].patch {
+		return true
+	} else if v[i].patch > v[j].patch {
+		return false
 	} else {
-		if v[i].minor < v[j].minor {
-			return true
-		} else if v[i].minor > v[j].minor {
-			return false
-		} else {
-			if v[i].patch < v[j].patch {
-				return true
-			} else if v[i].patch > v[j].patch {
-				return false
-			} else {
-				return false
-			}
-		}
+		return false
 	}
 }
 
