@@ -23,10 +23,10 @@ func readFromFile(n string) io.ReadCloser {
 }
 
 type installCmd struct {
-	throttle      int
-	forceCheckout bool
-	onlyCheckout  bool
-	includes      string
+	throttle             int
+	forceCheckout        bool
+	onlyCheckout         bool
+	includesWithRepoName string
 }
 
 func (c installCmd) Main(path string) {
@@ -41,14 +41,14 @@ func (c installCmd) install(src io.Reader) {
 		log.Fatalf("%v\n", err)
 	}
 
-	logger.Printf("includes: '%v'", c.includes)
-	re, err := regexp.Compile(c.includes)
+	logger.Printf("includes-with-repository-name: '%v'", c.includesWithRepoName)
+	re, err := regexp.Compile(c.includesWithRepoName)
 	if err != nil {
 		log.Fatalf("%v\n", err)
 	}
 	mods := make([]Mod, 0)
 	for _, e := range ms {
-		if y := re.Match([]byte(e.name)); y {
+		if y := re.Match([]byte(e.opts["git"])); y {
 			mods = append(mods, e)
 		}
 	}
