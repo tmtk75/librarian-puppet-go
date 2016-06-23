@@ -1,9 +1,9 @@
 package librarianpuppetgo
 
 import (
+	"bytes"
 	"fmt"
 	"log"
-	"os"
 	"regexp"
 	"strconv"
 )
@@ -34,9 +34,15 @@ func increment(s string) (string, error) {
 
 func Diff(a, b string, dirs []string) {
 	diff(a, b, func(oldm, newm Mod, oldref, newref string) {
-		fmt.Println(newm.Dest(), oldref, newref)
 		args := append([]string{"--no-pager", "diff", "-w", oldref, newref, "--"}, dirs...)
-		run2(os.Stdout, newm.Dest(), "git", args)
+		b := bytes.NewBuffer([]byte{})
+		run2(b, newm.Dest(), "git", args)
+		if b.String() == "" {
+			fmt.Printf("# NO any diff: %v %v %v\n", newm.Dest(), oldref, newref)
+		} else {
+			fmt.Printf("# FOUND: %v %v %v\n", newm.Dest(), oldref, newref)
+			fmt.Print(b.String())
+		}
 	})
 }
 
