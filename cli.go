@@ -86,9 +86,10 @@ e.g) diff Puppetfile.staging Puppetfile.development
 			a := c.String(cli.StringArg{Name: "SRC", Desc: "Source puppetfile"})
 			b := c.String(cli.StringArg{Name: "DST", Desc: "Destination puppetfile"})
 			d := c.Strings(cli.StringsArg{Name: "DIRS", Desc: "Directories to be compared"})
-			c.Spec = "SRC DST [DIRS...]"
+			s := c.Bool(cli.BoolOpt{Name: "summary s", Desc: "Summarize"})
+			c.Spec = "[OPTIONS] SRC DST [DIRS...]"
 			c.Action = func() {
-				Diff(*a, *b, *d)
+				Diff(*a, *b, *d, *s)
 			}
 		},
 	)

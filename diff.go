@@ -1,6 +1,7 @@
 package librarianpuppetgo
 
 import (
+	"bufio"
 	"bytes"
 	"fmt"
 	"log"
@@ -32,16 +33,37 @@ func increment(s string) (string, error) {
 	return fmt.Sprintf("release/0.%d", v+1), nil
 }
 
-func Diff(a, b string, dirs []string) {
+func Diff(a, b string, dirs []string, summary bool) {
 	diff(a, b, func(oldm, newm Mod, oldref, newref string) {
 		args := append([]string{"--no-pager", "diff", "-w", oldref, newref, "--"}, dirs...)
 		b := bytes.NewBuffer([]byte{})
 		run2(b, newm.Dest(), "git", args)
-		if b.String() == "" {
-			fmt.Printf("# NO any diff: %v %v %v\n", newm.Dest(), oldref, newref)
+		if !summary {
+			if b.String() == "" {
+				fmt.Printf("# NO any diff: %v %v %v\n", newm.Dest(), oldref, newref)
+			} else {
+				fmt.Printf("# FOUND: %v %v %v\n", newm.Dest(), oldref, newref)
+				fmt.Print(b.String())
+			}
 		} else {
-			fmt.Printf("# FOUND: %v %v %v\n", newm.Dest(), oldref, newref)
-			fmt.Print(b.String())
+			sc := bufio.NewScanner(b)
+			var add, del int
+			for sc.Scan() {
+				if len(sc.Text()) == 0 {
+					continue
+				}
+				//fmt.Printf("%q\n", sc.Text())
+				switch sc.Text()[0] {
+				case '+':
+					add++
+				case '-':
+					del++
+				default:
+				}
+			}
+			if add > 0 || del > 0 {
+				fmt.Printf("%v: %v insertion(+), %v deletion(-)\n", newm.name, add, del)
+			}
 		}
 	})
 }
