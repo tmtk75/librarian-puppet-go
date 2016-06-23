@@ -43,46 +43,35 @@ func newGit() *Git {
 }
 
 func TestGitPushCmd(t *testing.T) {
-	git := newGit()
-	//
-	s, err := git.PushCmd(
-		Mod{name: "foo", opts: map[string]string{"ref": "release/0.1"}},
-		Mod{name: "foo", opts: map[string]string{"ref": "a-sha1-abcd1234"}},
-	)
-	assert.Nil(t, err)
-	assert.Equal(t, "(cd modules/foo; git branch a-sha1-abcd1234 release/0.2; git push origin release/0.2:release/0.2)", s)
-
-	//
-	s, err = git.PushCmd(
-		Mod{name: "foo", opts: map[string]string{"ref": "release/0.1"}},
-		Mod{name: "foo", opts: map[string]string{"ref": "a-topic"}},
-	)
-	assert.Nil(t, err)
-	assert.Equal(t, "(cd modules/foo; git branch a-topic-sha1 release/0.2; git push origin release/0.2:release/0.2)", s)
-
-	//
-	s, err = git.PushCmd(
-		Mod{name: "foo", opts: map[string]string{"ref": "not-a-branch"}},
-		Mod{name: "foo", opts: map[string]string{"ref": "a-sha1-abcd1234"}},
-	)
-	assert.Nil(t, err)
-	assert.Equal(t, "# modules/foo is referred at a-sha1-abcd1234", s)
-
-	//
-	git.Sha1 = nil
-	s, err = git.PushCmd(
-		Mod{name: "foo", opts: map[string]string{"ref": "release/0.1"}},
-		Mod{name: "foo", opts: map[string]string{"ref": "master"}},
-	)
-	assert.Nil(t, err)
-	assert.Equal(t, "(cd modules/foo; git push origin master:release/0.2)", s)
-
-	//
-	s, err = git.PushCmd(
-		Mod{name: "foo", opts: map[string]string{"ref": "release/0.1"}},
-		Mod{name: "foo", opts: map[string]string{"ref": "develop"}},
-	)
-	assert.NotNil(t, err)
+	var tests = []struct {
+		sha1nil bool
+		errnil  bool
+		src     string
+		dst     string
+		exp     string
+	}{
+		{false, true, "release/0.1", "a-sha1-abcd1234", "(cd modules/foo; git branch a-sha1-abcd1234 release/0.2; git push origin release/0.2:release/0.2)"},
+		{false, true, "release/0.1", "a-topic", "(cd modules/foo; git branch a-topic-sha1 release/0.2; git push origin release/0.2:release/0.2)"},
+		{false, true, "not-a-branch", "a-sha1-abcd1234", "# INFO: modules/foo is referred at a-sha1-abcd1234"},
+		{true, true, "release/0.1", "master", "(cd modules/foo; git push origin master:release/0.2)"},
+		{false, false, "release/0.1", "develop", ""},
+	}
+	for _, c := range tests {
+		git := newGit()
+		if c.sha1nil {
+			git.Sha1 = nil
+		}
+		s, err := git.PushCmd(
+			Mod{name: "foo", opts: map[string]string{"ref": c.src}},
+			Mod{name: "foo", opts: map[string]string{"ref": c.dst}},
+		)
+		if c.errnil {
+			assert.Nil(t, err)
+		} else {
+			assert.NotNil(t, err)
+		}
+		assert.Equal(t, c.exp, s)
+	}
 }
 
 func TestGitPushCmd2(t *testing.T) {
@@ -103,53 +92,30 @@ func TestGitPushCmd2(t *testing.T) {
 }
 
 func TestGitPushCmdTag(t *testing.T) {
+	var tests = []struct {
+		diff string
+		src  string
+		dst  string
+		exp  string
+	}{
+		{"", "v0.1.3", "release/0.2", "# INFO: no diff for foo between v0.1.3 and release/0.2"},
+		{"a", "v0.1.3", "release/0.2", "(cd modules/foo; git tag v0.2.0 release/0.2; git push origin v0.2.0)"},
+		{"a", "v0.1.3", "a-topic", "# WARN: a-topic cannot be parsed minor version for foo"},
+		{"", "v0.2.3", "release/0.2", "# INFO: no diff for foo between v0.2.3 and release/0.2"},
+		{"a", "v0.2.3", "release/0.2", "(cd modules/foo; git tag v0.2.4 release/0.2; git push origin v0.2.4)"},
+	}
 	//
-	git := newGit()
-	git.Diff = func(wd, srcref, dstref string) string { return "" }
-	s, err := git.PushCmd(
-		Mod{name: "foo", user: "bar", opts: map[string]string{"ref": "v0.1.3"}},
-		Mod{name: "foo", user: "bar", opts: map[string]string{"ref": "release/0.2"}},
-	)
-	assert.Nil(t, err)
-	assert.Equal(t, "# INFO: no diff for foo between v0.1.3 and release/0.2", s)
 
-	//
-	git = newGit()
-	git.Diff = func(wd, srcref, dstref string) string { return "a" }
-	s, err = git.PushCmd(
-		Mod{name: "foo", user: "bar", opts: map[string]string{"ref": "v0.1.3"}},
-		Mod{name: "foo", user: "bar", opts: map[string]string{"ref": "release/0.2"}},
-	)
-	assert.Nil(t, err)
-	assert.Equal(t, "(cd modules/foo; git tag v0.2.0 release/0.2; git push origin v0.2.0)", s)
-
-	//
-	s, err = git.PushCmd(
-		Mod{name: "foo", user: "bar", opts: map[string]string{"ref": "v0.1.3"}},
-		Mod{name: "foo", user: "bar", opts: map[string]string{"ref": "a-topic"}},
-	)
-	assert.Nil(t, err)
-	assert.Equal(t, "# WARN: a-topic cannot be parsed minor version for foo", s)
-
-	//
-	git = newGit()
-	git.Diff = func(wd, srcref, dstref string) string { return "" }
-	s, err = git.PushCmd(
-		Mod{name: "foo", user: "bar", opts: map[string]string{"ref": "v0.2.3"}},
-		Mod{name: "foo", user: "bar", opts: map[string]string{"ref": "release/0.2"}},
-	)
-	assert.Nil(t, err)
-	assert.Equal(t, "# INFO: no diff for foo between v0.2.3 and release/0.2", s)
-
-	//
-	git = newGit()
-	git.Diff = func(wd, srcref, dstref string) string { return "a" }
-	s, err = git.PushCmd(
-		Mod{name: "foo", user: "bar", opts: map[string]string{"ref": "v0.2.3"}},
-		Mod{name: "foo", user: "bar", opts: map[string]string{"ref": "release/0.2"}},
-	)
-	assert.Nil(t, err)
-	assert.Equal(t, "(cd modules/foo; git tag v0.2.4 release/0.2; push origin v0.2.4)", s)
+	for _, c := range tests {
+		git := newGit()
+		git.Diff = func(wd, srcref, dstref string) string { return c.diff }
+		s, err := git.PushCmd(
+			Mod{name: "foo", user: "bar", opts: map[string]string{"ref": c.src}},
+			Mod{name: "foo", user: "bar", opts: map[string]string{"ref": c.dst}},
+		)
+		assert.Nil(t, err)
+		assert.Equal(t, c.exp, s)
+	}
 }
 
 func TestMinorVersionNumber(t *testing.T) {
@@ -209,6 +175,6 @@ func TestGitPushCmds(t *testing.T) {
 	assert.Equal(t, strings.TrimSpace(`
 (cd modules/foo; git branch a-sha1-abcd1234 release/0.2; git push origin release/0.2:release/0.2)
 (cd modules/bar; git branch a-topic-sha1 release/0.2; git push origin release/0.2:release/0.2)
-# modules/fiz is referred at a-sha1-abcd1234
+# INFO: modules/fiz is referred at a-sha1-abcd1234
 	`)+"\n", buf.String())
 }

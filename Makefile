@@ -30,7 +30,35 @@ pkg/librarian-puppet-go_linux_amd64.tar.gz: build
 	tar -C pkg -cz -f pkg/librarian-puppet-go_linux_amd64.tar.gz librarian-puppet-go_linux_amd64
 
 clean:
-	rm -rf librarian-puppet-go
+	rm -rf librarian-puppet-go *.out *.test
 
 distclean: clean
 	rm -rf pkg
+
+cover: c.out
+	go tool cover -html=c.out
+
+c.out: *.go
+	go test -coverprofile=c.out
+
+bench:
+	go test -bench=. -benchmem
+
+cpu.out:
+	go test -cpuprofile=cpu.out
+
+block.out:
+	go test -blockprofile=block.out
+
+mem.out:
+	go test -memprofile=mem.out
+
+cpuprofile: cpu.out
+	go tool pprof -text -nodecount=10 ./librarian-puppet-go.test cpu.out
+
+blockprofile: block.out
+	go tool pprof -text -nodecount=10 ./librarian-puppet-go.test block.out
+
+memprofile: mem.out
+	go tool pprof -text -nodecount=10 ./librarian-puppet-go.test mem.out
+

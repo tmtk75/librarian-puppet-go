@@ -19,11 +19,11 @@ func (g *Git) PushCmds(src, dst string) {
 			fmt.Fprintf(g.Writer, "# %v is missing in %v\n", srcm.name, dst)
 			continue
 		}
-		if srcm.opts["ref"] != "" && newm.opts["ref"] != "" {
-			if g.Diff(srcm.Dest(), srcm.opts["ref"], newm.opts["ref"]) == "" {
-				continue
-			}
-		}
+		//if srcm.opts["ref"] != "" && newm.opts["ref"] != "" {
+		//	if g.Diff(srcm.Dest(), srcm.opts["ref"], newm.opts["ref"]) == "" {
+		//		continue
+		//	}
+		//}
 		s, err := g.PushCmd(srcm, newm)
 		if err != nil {
 			log.Printf("WARN: %v\n", err)
@@ -123,16 +123,18 @@ func (g Git) PushCmd(oldm, newm Mod) (string, error) {
 				return "", fmt.Errorf("%v is less than %v", srcref, oldref)
 			}
 			if v == b {
-				return fmt.Sprintf("(cd modules/%v; git push origin %v:v0.%d.%d)", newm.name, srcref, v, c+1), nil
+				newtag := fmt.Sprintf("v0.%d.%d", v, c+1)
+				return fmt.Sprintf("(cd modules/%v; git tag %v %v; git push origin %v)", newm.name, newtag, srcref, newtag), nil
 			}
 
-			return fmt.Sprintf("(cd modules/%v; git push origin %v:v0.%d.0)", newm.name, srcref, v), nil
+			newtag := fmt.Sprintf("v0.%d.0", v)
+			return fmt.Sprintf("(cd modules/%v; git tag %v %v; git push origin %v)", newm.name, newtag, srcref, newtag), nil
 		}
 	}
 
 	dstref, err := increment(oldref)
 	if err != nil {
-		return fmt.Sprintf("# %v is referred at %v", newm.Dest(), newm.opts["ref"]), nil
+		return fmt.Sprintf("# INFO: %v is referred at %v", newm.Dest(), newm.opts["ref"]), nil
 	}
 
 	if g.IsCommit(newm.Dest(), srcref) {

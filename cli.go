@@ -147,6 +147,32 @@ Output doesn't have "v" prefix if it has "v".
 			)
 		},
 	)
+	app.Command(
+		"each",
+		"Exec a command you want for all modules",
+		func(c *cli.Cmd) {
+			src := c.String(cli.StringArg{Name: "FILE", Desc: "A puppetfile"})
+			args := c.Strings(cli.StringsArg{Name: "ARGS", Desc: "Command and args"})
+			prefix := c.String(cli.StringOpt{Name: "prefix p", Value: "", Desc: "Prefix template"})
+			c.LongDesc = `e.g)
+  each -- Puppetfile git --no-pager show .
+
+  each --prefix "{{.Name}}/{{.Ref}}    " -- Puppetfile git --no-pager log {{.Ref}} --format=%H -n1
+
+  In prefix template:
+          .Name    mod name
+          .Ref     :ref
+
+  In ARGS:
+          {{.Name}}     replaced with mod name
+          {{.Ref}}      replaced with :ref
+	  `
+			c.Spec = "[OPTIONS] FILE ARGS..."
+			c.Action = func() {
+				NewGit().Each(*src, *prefix, *args)
+			}
+		},
+	)
 	app.Run(os.Args)
 }
 

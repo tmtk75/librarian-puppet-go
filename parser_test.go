@@ -240,3 +240,9 @@ func TestIsInclude(t *testing.T) {
 		t.Errorf("'%v' should be 'world'", m)
 	}
 }
+
+func BenchmarkParseOpts(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		parseOpts(`:ref => "a"`)
+	}
+}
