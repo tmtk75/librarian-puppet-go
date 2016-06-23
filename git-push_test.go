@@ -103,14 +103,25 @@ func TestGitPushCmd2(t *testing.T) {
 }
 
 func TestGitPushCmdTag(t *testing.T) {
-	git := newGit()
 	//
+	git := newGit()
+	git.Diff = func(wd, srcref, dstref string) string { return "" }
 	s, err := git.PushCmd(
 		Mod{name: "foo", user: "bar", opts: map[string]string{"ref": "v0.1.3"}},
 		Mod{name: "foo", user: "bar", opts: map[string]string{"ref": "release/0.2"}},
 	)
 	assert.Nil(t, err)
-	assert.Equal(t, "(cd modules/foo; git push origin release/0.2:v0.2.0)", s)
+	assert.Equal(t, "# INFO: no diff for foo between v0.1.3 and release/0.2", s)
+
+	//
+	git = newGit()
+	git.Diff = func(wd, srcref, dstref string) string { return "a" }
+	s, err = git.PushCmd(
+		Mod{name: "foo", user: "bar", opts: map[string]string{"ref": "v0.1.3"}},
+		Mod{name: "foo", user: "bar", opts: map[string]string{"ref": "release/0.2"}},
+	)
+	assert.Nil(t, err)
+	assert.Equal(t, "(cd modules/foo; git tag v0.2.0 release/0.2; git push origin v0.2.0)", s)
 
 	//
 	s, err = git.PushCmd(
@@ -138,7 +149,7 @@ func TestGitPushCmdTag(t *testing.T) {
 		Mod{name: "foo", user: "bar", opts: map[string]string{"ref": "release/0.2"}},
 	)
 	assert.Nil(t, err)
-	assert.Equal(t, "(cd modules/foo; git push origin release/0.2:v0.2.4)", s)
+	assert.Equal(t, "(cd modules/foo; git tag v0.2.4 release/0.2; push origin v0.2.4)", s)
 }
 
 func TestMinorVersionNumber(t *testing.T) {
