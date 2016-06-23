@@ -1,6 +1,7 @@
 package librarianpuppetgo
 
 import (
+	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
@@ -86,10 +87,10 @@ e.g) diff Puppetfile.staging Puppetfile.development
 			a := c.String(cli.StringArg{Name: "SRC", Desc: "Source puppetfile"})
 			b := c.String(cli.StringArg{Name: "DST", Desc: "Destination puppetfile"})
 			d := c.Strings(cli.StringsArg{Name: "DIRS", Desc: "Directories to be compared"})
-			s := c.Bool(cli.BoolOpt{Name: "summary s", Desc: "Summarize"})
+			m := c.String(cli.StringOpt{Name: "mode", Value: STAT, Desc: fmt.Sprintf("Specify diff mode. %v, %v and %v", STAT, FULL, SUMMARY)})
 			c.Spec = "[OPTIONS] SRC DST [DIRS...]"
 			c.Action = func() {
-				Diff(*a, *b, *d, *s)
+				Diff(*a, *b, *d, *m)
 			}
 		},
 	)

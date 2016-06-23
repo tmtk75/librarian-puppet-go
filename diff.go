@@ -33,19 +33,32 @@ func increment(s string) (string, error) {
 	return fmt.Sprintf("release/0.%d", v+1), nil
 }
 
-func Diff(a, b string, dirs []string, summary bool) {
+const (
+	STAT    = "STAT"
+	FULL    = "FULL"
+	SUMMARY = "SUMMARY"
+)
+
+func Diff(a, b string, dirs []string, mode string) {
 	diff(a, b, func(oldm, newm Mod, oldref, newref string) {
-		args := append([]string{"--no-pager", "diff", "-w", oldref, newref, "--"}, dirs...)
+		args := []string{"--no-pager", "diff", "-w"}
+		if mode == STAT {
+			args = append(args, "--stat")
+		}
+		args = append(args, []string{oldref, newref, "--"}...)
+		args = append(args, dirs...)
+
 		b := bytes.NewBuffer([]byte{})
 		run2(b, newm.Dest(), "git", args)
-		if !summary {
+		switch mode {
+		case FULL, STAT:
 			if b.String() == "" {
 				fmt.Printf("# NO any diff: %v %v %v\n", newm.Dest(), oldref, newref)
 			} else {
 				fmt.Printf("# FOUND: %v %v %v\n", newm.Dest(), oldref, newref)
 				fmt.Print(b.String())
 			}
-		} else {
+		case SUMMARY:
 			sc := bufio.NewScanner(b)
 			var add, del int
 			for sc.Scan() {
@@ -62,8 +75,10 @@ func Diff(a, b string, dirs []string, summary bool) {
 				}
 			}
 			if add > 0 || del > 0 {
-				fmt.Printf("%v: %v insertion(+), %v deletion(-)\n", newm.name, add, del)
+				fmt.Printf("%v: %v insertion(+), %v deletion(-) between %v and %v\n", newm.name, add, del, oldref, newref)
 			}
+		default:
+			log.Fatalf("unknown mode: %v", mode)
 		}
 	})
 }
