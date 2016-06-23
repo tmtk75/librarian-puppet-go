@@ -101,7 +101,7 @@ func run(wd, s string, args []string) error {
 func gitDiff(wd, aref, bref string) string {
 	buf := bytes.NewBuffer([]byte{})
 	w := bufio.NewWriter(buf)
-	run2(w, wd, "git", []string{"--no-pager", "diff", "-w", aref, bref})
+	run2(w, wd, "git", []string{"--no-pager", "diff", "-w", aref, bref, "--"})
 	return buf.String()
 }
 
@@ -113,5 +113,6 @@ func run2(w io.Writer, wd, s string, args []string) {
 	err := cmd.Run()
 	if err != nil {
 		//log.Fatalln(err)
+		//fmt.Println(wd, s, args)
 	}
 }

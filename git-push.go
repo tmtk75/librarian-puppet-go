@@ -107,26 +107,15 @@ func (g Git) PushCmd(oldm, newm Mod) (string, error) {
 
 	srcref := newm.opts["ref"]
 	if g.IsTag(newm.Dest(), oldref) && g.IsBranch(newm.Dest(), srcref) {
-		if v, err := minorVersionNumber(srcref); err != nil {
+		if _, err := minorVersionNumber(srcref); err != nil {
 			return fmt.Sprintf("# WARN: %s cannot be parsed minor version for %v", srcref, newm.name), nil
 		} else {
 			d := g.Diff(newm.Dest(), oldref, srcref)
 			if d == "" {
 				return fmt.Sprintf("# INFO: no diff for %v between %v and %v", newm.name, oldref, srcref), nil
 			}
-			_, b, c, err := semanticVersion(oldref)
-			if err != nil {
-				return "", fmt.Errorf("%v", err)
-			}
-			//TODO support major version
-			if v < b {
-				return "", fmt.Errorf("%v is less than %v", srcref, oldref)
-			}
-			if v == b {
-				return fmt.Sprintf("(cd modules/%v; git push origin %v:v0.%d.%d)", newm.name, srcref, v, c+1), nil
-			}
 
-			return fmt.Sprintf("(cd modules/%v; git push origin %v:v0.%d.0)", newm.name, srcref, v), nil
+			return fmt.Sprintf("%v %v %v", newm.name, srcref, oldref), nil
 		}
 	}
 
