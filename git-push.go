@@ -19,11 +19,6 @@ func (g *Git) PushCmds(src, dst string) {
 			fmt.Fprintf(g.Writer, "# %v is missing in %v\n", srcm.name, dst)
 			continue
 		}
-		//if srcm.opts["ref"] != "" && newm.opts["ref"] != "" {
-		//	if g.Diff(srcm.Dest(), srcm.opts["ref"], newm.opts["ref"]) == "" {
-		//		continue
-		//	}
-		//}
 		s, err := g.PushCmd(srcm, newm)
 		if err != nil {
 			log.Printf("WARN: %v\n", err)

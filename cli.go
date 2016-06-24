@@ -156,6 +156,7 @@ Output doesn't have "v" prefix if it has "v".
 			src := c.String(cli.StringArg{Name: "FILE", Desc: "A puppetfile"})
 			args := c.Strings(cli.StringsArg{Name: "ARGS", Desc: "Command and args"})
 			prefix := c.String(cli.StringOpt{Name: "prefix p", Value: "", Desc: "Prefix template"})
+			header := c.String(cli.StringOpt{Name: "header", Desc: "Header template"})
 			c.LongDesc = `Exec a command you want for each module.
 
 You can use template notation in arguments and option parameters.
@@ -175,7 +176,10 @@ e.g)
 	  `
 			c.Spec = "[OPTIONS] FILE ARGS..."
 			c.Action = func() {
-				NewGit().Each(*src, *prefix, *args)
+				NewGit().Each(*src, *args, eachOpts{
+					prefix: *prefix,
+					header: *header,
+				})
 			}
 		},
 	)
