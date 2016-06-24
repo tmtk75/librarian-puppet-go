@@ -151,23 +151,27 @@ Output doesn't have "v" prefix if it has "v".
 	)
 	app.Command(
 		"each",
-		"Exec a command you want for all modules",
+		"Exec a command you want for each module",
 		func(c *cli.Cmd) {
 			src := c.String(cli.StringArg{Name: "FILE", Desc: "A puppetfile"})
 			args := c.Strings(cli.StringsArg{Name: "ARGS", Desc: "Command and args"})
 			prefix := c.String(cli.StringOpt{Name: "prefix p", Value: "", Desc: "Prefix template"})
-			c.LongDesc = `e.g)
-  each -- Puppetfile git --no-pager show .
+			c.LongDesc = `Exec a command you want for each module.
 
-  each --prefix "{{.Name}}/{{.Ref}}    " -- Puppetfile git --no-pager log {{.Ref}} --format=%H -n1
+You can use template notation in arguments and option parameters.
 
-  In prefix template:
-          .Name    mod name
-          .Ref     :ref
+  {{.Name}}     replaced with mod name
+  {{.Ref}}      replaced with :ref
 
-  In ARGS:
-          {{.Name}}     replaced with mod name
-          {{.Ref}}      replaced with :ref
+e.g)
+  Exec git show without pager
+
+      each -- Puppetfile git --no-pager show {{.Ref}}
+
+  Print commit of ref for each module
+
+      each --prefix "{{.Name}}    {{.Ref}}    " -- Puppetfile \
+        git --no-pager log {{.Ref}} --format=%H -n1
 	  `
 			c.Spec = "[OPTIONS] FILE ARGS..."
 			c.Action = func() {
