@@ -5,8 +5,10 @@ import (
 	"bytes"
 	"fmt"
 	"log"
+	"os"
 	"regexp"
 	"strconv"
+	"text/tabwriter"
 )
 
 func findModIn(mods []Mod, m Mod) (Mod, error) {
@@ -40,6 +42,9 @@ const (
 )
 
 func Diff(a, b string, dirs []string, mode string) {
+	w := new(tabwriter.Writer)
+	w.Init(os.Stdout, 0, 8, 0, '\t', 0)
+
 	diff(a, b, func(oldm, newm Mod, oldref, newref string) {
 		args := []string{"--no-pager", "diff", "-w"}
 		if mode == STAT {
@@ -75,12 +80,14 @@ func Diff(a, b string, dirs []string, mode string) {
 				}
 			}
 			if add > 0 || del > 0 {
-				fmt.Printf("%v: %v insertion(+), %v deletion(-) between %v and %v\n", newm.name, add, del, oldref, newref)
+				fmt.Fprintf(w, "%v\t %v insertion(+), %v deletion(-)\tbetween %v and %v\n", newm.name, add, del, oldref, newref)
 			}
 		default:
 			log.Fatalf("unknown mode: %v", mode)
 		}
 	})
+
+	w.Flush()
 }
 
 func parse(f string) []Mod {
