@@ -5,5 +5,5 @@ import (
 )
 
 func main() {
-	librarianpuppetgo.CliMain()
+	librarianpuppetgo.CLIMain()
 }

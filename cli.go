@@ -9,9 +9,9 @@ import (
 	"github.com/jawher/mow.cli"
 )
 
-func CliMain() {
+func CLIMain() {
 	app := cli.App("librarian-puppet-go", "Support a workflow for puppet modules")
-	app.Version("version", "0.3.2")
+	app.Version("version", "0.3.3")
 	var (
 		verbose    = app.Bool(cli.BoolOpt{Name: "v verbose", EnvVar: "LP_VERBOSE", Desc: "Show logs verbosely"})
 		modulepath = app.String(cli.StringOpt{Name: "module-path", Value: "modules", Desc: "Path to be for modules"})
