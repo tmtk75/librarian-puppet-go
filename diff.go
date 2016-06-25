@@ -8,6 +8,7 @@ import (
 	"os"
 	"regexp"
 	"strconv"
+	"strings"
 	"text/tabwriter"
 )
 
@@ -44,6 +45,7 @@ const (
 func Diff(a, b string, dirs []string, mode string) {
 	w := new(tabwriter.Writer)
 	w.Init(os.Stdout, 0, 8, 0, '\t', 0)
+	mode = strings.ToUpper(mode)
 
 	diff(a, b, func(oldm, newm Mod, oldref, newref string) {
 		args := []string{"--no-pager", "diff", "-w"}
