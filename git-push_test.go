@@ -44,20 +44,23 @@ func newGit() *Git {
 
 func TestGitPushCmd(t *testing.T) {
 	var tests = []struct {
+		diff    string
 		sha1nil bool
 		errnil  bool
 		src     string
 		dst     string
 		exp     string
 	}{
-		{false, true, "release/0.1", "a-sha1-abcd1234", "(cd modules/foo; git branch a-sha1-abcd1234 release/0.2; git push origin release/0.2:release/0.2)"},
-		{false, true, "release/0.1", "a-topic", "(cd modules/foo; git branch a-topic-sha1 release/0.2; git push origin release/0.2:release/0.2)"},
-		{false, true, "not-a-branch", "a-sha1-abcd1234", "# INFO: modules/foo is referred at a-sha1-abcd1234"},
-		{true, true, "release/0.1", "master", "(cd modules/foo; git push origin master:release/0.2)"},
-		{false, false, "release/0.1", "develop", ""},
+		{"a", false, true, "release/0.1", "a-sha1-abcd1234", "(cd modules/foo; git branch a-sha1-abcd1234 release/0.2; git push origin release/0.2:release/0.2)"},
+		{"a", false, true, "release/0.1", "a-topic", "(cd modules/foo; git branch a-topic-sha1 release/0.2; git push origin release/0.2:release/0.2)"},
+		{"a", false, true, "not-a-branch", "a-sha1-abcd1234", "# INFO: modules/foo is referred at a-sha1-abcd1234"},
+		{"a", true, true, "release/0.1", "master", "(cd modules/foo; git push origin master:release/0.2)"},
+		{"a", false, false, "release/0.1", "develop", ""},
+		{"", false, true, "release/0.2", "master", "# NO diff for modules/foo between release/0.2 and master"},
 	}
 	for _, c := range tests {
 		git := newGit()
+		git.Diff = func(wd, srcref, dstref string) string { return c.diff }
 		if c.sha1nil {
 			git.Sha1 = nil
 		}

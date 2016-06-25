@@ -126,6 +126,10 @@ func (g Git) PushCmd(oldm, newm Mod) (string, error) {
 			return fmt.Sprintf("(cd modules/%v; git tag %v %v; git push origin %v)", newm.name, newtag, srcref, newtag), nil
 		}
 	}
+	d := g.Diff(newm.Dest(), oldref, srcref)
+	if d == "" {
+		return fmt.Sprintf("# NO diff for %v between %v and %v", newm.Dest(), oldref, srcref), nil
+	}
 
 	dstref, err := increment(oldref)
 	if err != nil {
