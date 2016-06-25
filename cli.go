@@ -157,27 +157,40 @@ Output doesn't have "v" prefix if it has "v".
 			args := c.Strings(cli.StringsArg{Name: "ARGS", Desc: "Command and args"})
 			prefix := c.String(cli.StringOpt{Name: "prefix p", Value: "", Desc: "Prefix template"})
 			suffix := c.String(cli.StringOpt{Name: "suffix s", Value: "", Desc: "Suffix template"})
+			body := c.String(cli.StringOpt{Name: "body b", Value: "{{.Value}}", Desc: "Body template"})
 			c.LongDesc = `Exec a command you want for each module.
 
 You can use template notation in arguments and option parameters.
 
   {{.Name}}     replaced with mod name
   {{.Ref}}      replaced with :ref
+  {{.Value}}    replaced with stdout of the command. Given only for body option
 
-e.g)
+
+Examples
+
   Exec git show without pager
 
       each -- Puppetfile git --no-pager show {{.Ref}}
 
   Print commit of ref for each module
 
-      each --prefix "{{.Name}}    {{.Ref}}    " -- Puppetfile \
+      each --prefix "{{.Name}}\t{{.Ref}}\t" -- Puppetfile \
         git --no-pager log {{.Ref}} --format=%H -n1
-	  `
+
+  Name, current & latest tag in LTSV for each module in a Puppetfile
+
+      each --prefix "name:{{.Name}}\tcurrent:{{.Ref}}\t" \
+           --body "latest:{{.Value}}" \
+           --suffix "\n" \
+	   Puppetfile -- \
+           bash -c "git tag | egrep ^v[0-9].[0-9].[0-9] | librarian-puppet-go semver sort | tail -1"
+`
 			c.Spec = "[OPTIONS] FILE ARGS..."
 			c.Action = func() {
 				NewGit().Each(*src, *args, eachOpts{
 					prefix: *prefix,
+					body:   *body,
 					suffix: *suffix,
 				})
 			}

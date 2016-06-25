@@ -11,6 +11,7 @@ import (
 
 type eachOpts struct {
 	prefix, suffix string
+	body           string
 }
 
 func (g *Git) Each(path string, cmds []string, opts eachOpts) {
@@ -29,30 +30,45 @@ func (g *Git) Each(path string, cmds []string, opts eachOpts) {
 			log.Fatalln(err)
 		}
 		fmt.Fprint(os.Stdout, p)
-		run2(os.Stdout, mod.Dest(), c[0], c[1:])
+		b := bytes.NewBuffer([]byte{})
+		run2(b, mod.Dest(), c[0], c[1:])
+		if opts.body == "" {
+			fmt.Fprint(os.Stdout, b)
+		} else {
+			v := struct{ Name, Ref, Value string }{mod.name, mod.opts["ref"], b.String()}
+			s, err := replaceWith(opts.body, v)
+			if err != nil {
+				log.Fatalln(err)
+			}
+			fmt.Fprint(os.Stdout, s)
+		}
 		fmt.Fprint(os.Stdout, s)
 	}
 }
 
-func replaceWithMod(templ string, m Mod) (string, error) {
-	s, err := makeEachArgs([]string{templ}, m)
-	return s[0], err
+func replaceWithMod(t string, m Mod) (string, error) {
+	return replaceWith(t, struct{ Name, Ref string }{m.name, m.opts["ref"]})
+}
+
+func replaceWith(templ string, v interface{}) (string, error) {
+	t, err := template.New("").Parse(templ)
+	if err != nil {
+		return "", err
+	}
+	b := bytes.NewBuffer([]byte{})
+	t.Execute(b, v)
+	s := strings.Replace(b.String(), "\\n", "\n", -1)
+	s = strings.Replace(s, "\\t", "\t", -1)
+	return s, err
 }
 
 func makeEachArgs(args []string, m Mod) ([]string, error) {
 	c := make([]string, len(args))
 	for i, e := range args {
-		t, err := template.New("").Parse(e)
+		s, err := replaceWithMod(e, m)
 		if err != nil {
 			return []string{e}, err
 		}
-		b := bytes.NewBuffer([]byte{})
-		t.Execute(b, struct {
-			Name string
-			Ref  string
-		}{m.name, m.opts["ref"]})
-		s := strings.Replace(b.String(), "\\n", "\n", -1)
-		s = strings.Replace(s, "\\t", "\t", -1)
 		c[i] = s
 	}
 	return c, nil
