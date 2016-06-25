@@ -119,11 +119,11 @@ func (g Git) PushCmd(oldm, newm Mod) (string, error) {
 			}
 			if v == b {
 				newtag := fmt.Sprintf("v0.%d.%d", v, c+1)
-				return fmt.Sprintf("(cd modules/%v; git tag %v %v; git push origin %v)", newm.name, newtag, srcref, newtag), nil
+				return fmt.Sprintf("(cd %v; git tag %v %v; git push origin %v)", newm.Dest(), newtag, srcref, newtag), nil
 			}
 
 			newtag := fmt.Sprintf("v0.%d.0", v)
-			return fmt.Sprintf("(cd modules/%v; git tag %v %v; git push origin %v)", newm.name, newtag, srcref, newtag), nil
+			return fmt.Sprintf("(cd %v; git tag %v %v; git push origin %v)", newm.Dest(), newtag, srcref, newtag), nil
 		}
 	}
 	d := g.Diff(newm.Dest(), oldref, srcref)
