@@ -5,11 +5,12 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strings"
 	"text/template"
 )
 
 type eachOpts struct {
-	header, prefix string
+	prefix, suffix string
 }
 
 func (g *Git) Each(path string, cmds []string, opts eachOpts) {
@@ -19,13 +20,17 @@ func (g *Git) Each(path string, cmds []string, opts eachOpts) {
 		if err != nil {
 			log.Fatalln(err)
 		}
-
-		r, err := replaceWithMod(opts.prefix, mod)
+		p, err := replaceWithMod(opts.prefix, mod)
 		if err != nil {
 			log.Fatalln(err)
 		}
-		fmt.Print(r)
+		s, err := replaceWithMod(opts.suffix, mod)
+		if err != nil {
+			log.Fatalln(err)
+		}
+		fmt.Fprint(os.Stdout, p)
 		run2(os.Stdout, mod.Dest(), c[0], c[1:])
+		fmt.Fprint(os.Stdout, s)
 	}
 }
 
@@ -46,7 +51,9 @@ func makeEachArgs(args []string, m Mod) ([]string, error) {
 			Name string
 			Ref  string
 		}{m.name, m.opts["ref"]})
-		c[i] = b.String()
+		s := strings.Replace(b.String(), "\\n", "\n", -1)
+		s = strings.Replace(s, "\\t", "\t", -1)
+		c[i] = s
 	}
 	return c, nil
 }

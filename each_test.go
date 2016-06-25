@@ -16,8 +16,12 @@ func TestReplaceWithMod(t *testing.T) {
 		{
 			"{{.Name}} {{.Ref}}",
 			Mod{name: "foo", opts: map[string]string{"ref": "01234"}},
-			"foo 01234",
-			false,
+			"foo 01234", false,
+		},
+		{
+			"a\\nb\\t",
+			Mod{},
+			"a\nb\t", false,
 		},
 	}
 
