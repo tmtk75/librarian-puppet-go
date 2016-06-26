@@ -106,12 +106,13 @@ func gitDiff(wd, aref, bref string) string {
 }
 
 func run2(w io.Writer, wd, s string, args []string) {
+	run3(w, os.Stderr, wd, s, args)
+}
+
+func run3(w, x io.Writer, wd, s string, args []string) error {
 	cmd := exec.Command(s, args...)
 	cmd.Dir = wd
-	cmd.Stderr = os.Stderr
 	cmd.Stdout = w
-	err := cmd.Run()
-	if err != nil {
-		//log.Fatalln(err)
-	}
+	cmd.Stderr = x
+	return cmd.Run()
 }

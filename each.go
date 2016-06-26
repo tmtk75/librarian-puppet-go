@@ -16,6 +16,7 @@ type eachOpts struct {
 
 func (g *Git) Each(path string, cmds []string, opts eachOpts) {
 	mods := parse(path)
+	out := os.Stdout
 	for _, mod := range mods {
 		c, err := makeEachArgs(cmds, mod)
 		if err != nil {
@@ -29,20 +30,26 @@ func (g *Git) Each(path string, cmds []string, opts eachOpts) {
 		if err != nil {
 			log.Fatalln(err)
 		}
-		fmt.Fprint(os.Stdout, p)
 		b := bytes.NewBuffer([]byte{})
-		run2(b, mod.Dest(), c[0], c[1:])
+		x := bytes.NewBuffer([]byte{})
+		if err := run3(b, x, mod.Dest(), c[0], c[1:]); err != nil {
+			fmt.Fprintf(out, "# Failed to run `%v` in %v\n", c, mod.Dest())
+			fmt.Fprintf(os.Stderr, "%v", x)
+			continue
+		}
+
+		fmt.Fprint(out, p)
 		if opts.body == "" {
-			fmt.Fprint(os.Stdout, b)
+			fmt.Fprint(out, b)
 		} else {
 			v := struct{ Name, Ref, Value string }{mod.name, mod.opts["ref"], b.String()}
 			s, err := replaceWith(opts.body, v)
 			if err != nil {
 				log.Fatalln(err)
 			}
-			fmt.Fprint(os.Stdout, s)
+			fmt.Fprint(out, s)
 		}
-		fmt.Fprint(os.Stdout, s)
+		fmt.Fprint(out, s)
 	}
 }
 
