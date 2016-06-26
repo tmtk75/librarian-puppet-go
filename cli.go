@@ -113,7 +113,7 @@ e.g) diff Puppetfile.staging Puppetfile.development
 		func(c *cli.Cmd) {
 			c.LongDesc = `Print bumped-up puppetfile based on given file
 
-		e.g) bump-up Puppetfile.staging Puppetfile.development`
+  e.g) bump-up Puppetfile.staging Puppetfile.development`
 			a := c.String(cli.StringArg{Name: "SRC", Desc: "Source puppetfile"})
 			b := c.String(cli.StringArg{Name: "DST", Desc: "Destination puppetfile"})
 			relBranch := c.String(cli.StringOpt{Name: "release-branch", Value: "release/0.1", Desc: "Release branch name used first"})
@@ -183,8 +183,8 @@ Examples
       each --prefix "name:{{.Name}}\tcurrent:{{.Ref}}\t" \
            --body "latest:{{.Value}}" \
            --suffix "\n" \
-	   Puppetfile -- \
-           bash -c "git tag | egrep ^v[0-9].[0-9].[0-9] | librarian-puppet-go semver sort | tail -1"
+           Puppetfile -- \
+           bash -c "git tag | egrep '^v[0-9]+\.[0-9]+\.[0-9]+$' | librarian-puppet-go semver sort | tail -1"
 `
 			c.Spec = "[OPTIONS] FILE ARGS..."
 			c.Action = func() {
