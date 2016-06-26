@@ -13,14 +13,16 @@ func CLIMain() {
 	app := cli.App("librarian-puppet-go", "Support a workflow for puppet modules")
 	app.Version("version", "0.3.5")
 	var (
-		verbose    = app.Bool(cli.BoolOpt{Name: "v verbose", EnvVar: "LP_VERBOSE", Desc: "Show logs verbosely"})
-		modulepath = app.String(cli.StringOpt{Name: "module-path", Value: "modules", Desc: "Path to be for modules"})
+		verbose   = app.Bool(cli.BoolOpt{Name: "v verbose", EnvVar: "LP_VERBOSE", Desc: "Show logs verbosely"})
+		modpath   = app.String(cli.StringOpt{Name: "module-path", Value: "modules", Desc: "Path to be for modules"})
+		defbranch = app.String(cli.StringOpt{Name: "default-branch", Value: "master", Desc: "Default branch name if no ref"})
 	)
 	app.Before = func() {
 		if *verbose {
 			logger = log.New(os.Stderr, "", log.LstdFlags)
 		}
-		modulePath = *modulepath
+		modulePath = *modpath
+		defaultBranch = *defbranch
 	}
 	var (
 		fileArg     = cli.StringArg{Name: "FILE", Desc: "A puppetfile path"}
