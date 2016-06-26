@@ -113,12 +113,12 @@ func diff(oldfile, newfile string, f DiffFunc) {
 			log.Printf("INFO: %v in %s\n", err, oldfile)
 			continue
 		}
-		newref := newm.opts["ref"]
+		newref := newm.Ref()
 		if newref == "" {
 			logger.Printf("INFO: missing ref in %v of %v", newm.name, newfile)
 			continue
 		}
-		oldref := oldm.opts["ref"]
+		oldref := oldm.Ref()
 		if oldref == "" {
 			logger.Printf("INFO: missing ref in %v of %v", oldm.name, oldfile)
 			continue

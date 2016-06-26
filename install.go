@@ -124,8 +124,8 @@ func (c installCmd) installMod(m Mod) error {
 	}
 
 	ver := m.version
-	if m.opts["ref"] != "" {
-		ver = m.opts["ref"]
+	if m.Ref() != "" {
+		ver = m.Ref()
 	}
 
 	err = gitCheckout(m.Dest(), ver, c.forceCheckout)

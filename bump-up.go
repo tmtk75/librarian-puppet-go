@@ -26,7 +26,7 @@ func (g *Git) bumpUpMod(n Mod, mods []Mod, rel, filename string) (string, error)
 	m, err := findModIn(mods, n)
 	if err != nil {
 		logger.Printf("INFO: %v in %v. old one is used\n", err, filename)
-		if n.opts["ref"] != "" {
+		if n.Ref() != "" {
 			opts := map[string]string{"git": n.opts["git"], "ref": rel}
 			p := Mod{name: n.name, version: n.version, opts: opts, user: n.user}
 			return p.Format(), nil
@@ -34,8 +34,8 @@ func (g *Git) bumpUpMod(n Mod, mods []Mod, rel, filename string) (string, error)
 			return n.Format(), nil
 		}
 	}
-	aref := m.opts["ref"]
-	bref := n.opts["ref"]
+	aref := m.Ref()
+	bref := n.Ref()
 	if aref == "" || bref == "" {
 		return n.Format(), nil
 	}
@@ -43,7 +43,7 @@ func (g *Git) bumpUpMod(n Mod, mods []Mod, rel, filename string) (string, error)
 	if g.IsTag(m.Dest(), aref) && g.IsBranch(n.Dest(), bref) {
 		d := g.Diff(n.Dest(), aref, bref)
 		if d == "" {
-			opts := map[string]string{"git": n.opts["git"], "ref": m.opts["ref"]}
+			opts := map[string]string{"git": n.opts["git"], "ref": m.Ref()}
 			p := Mod{name: n.name, version: n.version, opts: opts}
 			return p.Format(), nil
 		}
@@ -68,12 +68,12 @@ func (g *Git) bumpUpMod(n Mod, mods []Mod, rel, filename string) (string, error)
 
 	d := g.Diff(n.Dest(), aref, bref)
 	if d == "" {
-		opts := map[string]string{"git": n.opts["git"], "ref": m.opts["ref"]}
+		opts := map[string]string{"git": n.opts["git"], "ref": m.Ref()}
 		p := Mod{name: n.name, version: n.version, opts: opts}
 		return p.Format(), nil
 	}
 
-	newref, err := increment(m.opts["ref"])
+	newref, err := increment(m.Ref())
 	if err != nil {
 		log.Printf("INFO: %v for %v. new one is used as is\n", err, n.name)
 		return n.Format(), nil

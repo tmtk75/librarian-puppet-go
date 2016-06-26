@@ -53,5 +53,12 @@ func (m Mod) Format() string {
 			return fmt.Sprintf("mod '%s', '%s'", m.name, m.version)
 		}
 	}
-	return fmt.Sprintf("mod '%s', :git => '%s', :ref => '%s'", m.name, m.opts["git"], m.opts["ref"])
+	return fmt.Sprintf("mod '%s', :git => '%s', :ref => '%s'", m.name, m.opts["git"], m.Ref())
+}
+
+func (m Mod) Ref() string {
+	if m.opts["ref"] == "" {
+		return m.version
+	}
+	return m.opts["ref"]
 }
