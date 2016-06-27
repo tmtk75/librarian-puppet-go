@@ -1,6 +1,7 @@
 package librarianpuppetgo
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -43,4 +44,20 @@ func TestModRef(t *testing.T) {
 
 	defaultBranch = "master"
 	assert.Equal(t, "master", mods[0].Ref())
+}
+
+func TestModRefSemver(t *testing.T) {
+	tests := []struct {
+		ref, want string
+	}{
+		{"v10.20.30", "10.20.30"},
+		{"10.20.30", "10.20.30"},
+		{"master", "master"},
+		{"a1.2.3", "a1.2.3"},
+	}
+	for _, e := range tests {
+		s := fmt.Sprintf(`mod 'foo', :git => 'user@github.com/foo/bar', :ref => '%s'`, e.ref)
+		mods, _ := parsePuppetfile(r(s))
+		assert.Equal(t, e.want, mods[0].RefSemver())
+	}
 }

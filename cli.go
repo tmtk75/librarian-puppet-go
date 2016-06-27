@@ -164,10 +164,10 @@ Output doesn't have "v" prefix if it has "v".
 
 You can use template notation in arguments and option parameters.
 
-  {{.Name}}     replaced with mod name
-  {{.Ref}}      replaced with :ref
-  {{.Value}}    replaced with stdout of the command. Given only for body option
-
+  {{.Name}}         replaced with mod name
+  {{.Ref}}          replaced with :ref
+  {{.Value}}        replaced with stdout of the command. Given only for body option
+  {{.RefSemver}}    replaced with :ref without prefix "v" if it's semantic version string
 
 Examples
 

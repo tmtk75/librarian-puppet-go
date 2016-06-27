@@ -14,6 +14,12 @@ type eachOpts struct {
 	body           string
 }
 
+type params struct {
+	Name      string
+	Ref       string
+	RefSemver string
+}
+
 func (g *Git) Each(path string, cmds []string, opts eachOpts) {
 	mods := parse(path)
 	out := os.Stdout
@@ -42,7 +48,10 @@ func (g *Git) Each(path string, cmds []string, opts eachOpts) {
 		if opts.body == "" {
 			fmt.Fprint(out, b)
 		} else {
-			v := struct{ Name, Ref, Value string }{mod.name, mod.Ref(), b.String()}
+			v := struct {
+				params
+				Value string
+			}{params{mod.name, mod.Ref(), mod.RefSemver()}, b.String()}
 			s, err := replaceWith(opts.body, v)
 			if err != nil {
 				log.Fatalln(err)
@@ -54,7 +63,11 @@ func (g *Git) Each(path string, cmds []string, opts eachOpts) {
 }
 
 func replaceWithMod(t string, m Mod) (string, error) {
-	return replaceWith(t, struct{ Name, Ref string }{m.name, m.Ref()})
+	return replaceWith(t, params{
+		m.name,
+		m.Ref(),
+		m.RefSemver(),
+	})
 }
 
 func replaceWith(templ string, v interface{}) (string, error) {

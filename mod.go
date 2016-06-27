@@ -67,3 +67,11 @@ func (m Mod) Ref() string {
 	}
 	return m.opts["ref"]
 }
+
+func (m Mod) RefSemver() string {
+	x, y, z, err := semanticVersion(m.Ref())
+	if err != nil {
+		return m.Ref()
+	}
+	return fmt.Sprintf("%d.%d.%d", x, y, z)
+}
