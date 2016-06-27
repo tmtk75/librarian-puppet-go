@@ -139,7 +139,7 @@ func (g Git) PushCmd(oldm, newm Mod) (string, error) {
 	if g.IsCommit(newm.Dest(), srcref) {
 		return fmt.Sprintf(
 			"(cd %v; git branch %v %v; git push %v %v:%v)",
-			newm.Dest(), srcref, dstref, g.Remote, dstref, dstref), nil
+			newm.Dest(), dstref, srcref, g.Remote, dstref, dstref), nil
 	}
 	if !g.IsBranch(newm.Dest(), srcref) {
 		return "", fmt.Errorf("%v is neither tag or branch in %v", srcref, newm.Dest())
@@ -148,7 +148,7 @@ func (g Git) PushCmd(oldm, newm Mod) (string, error) {
 		srcsha1 := g.Sha1(newm.Dest(), srcref)
 		return fmt.Sprintf(
 			"(cd %v; git branch %v %v; git push %v %v:%v)",
-			newm.Dest(), srcsha1, dstref, g.Remote, dstref, dstref), nil
+			newm.Dest(), dstref, srcsha1, g.Remote, dstref, dstref), nil
 	}
 	return fmt.Sprintf(
 		"(cd %v; git push %v %v:%v)",

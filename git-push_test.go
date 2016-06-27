@@ -51,8 +51,8 @@ func TestGitPushCmd(t *testing.T) {
 		dst     string
 		exp     string
 	}{
-		{"a", false, true, "release/0.1", "a-sha1-abcd1234", "(cd modules/foo; git branch a-sha1-abcd1234 release/0.2; git push origin release/0.2:release/0.2)"},
-		{"a", false, true, "release/0.1", "a-topic", "(cd modules/foo; git branch a-topic-sha1 release/0.2; git push origin release/0.2:release/0.2)"},
+		{"a", false, true, "release/0.1", "a-sha1-abcd1234", "(cd modules/foo; git branch release/0.2 a-sha1-abcd1234; git push origin release/0.2:release/0.2)"},
+		{"a", false, true, "release/0.1", "a-topic", "(cd modules/foo; git branch release/0.2 a-topic-sha1; git push origin release/0.2:release/0.2)"},
 		{"a", false, true, "not-a-branch", "a-sha1-abcd1234", "# INFO: modules/foo is referred at a-sha1-abcd1234"},
 		{"a", true, true, "release/0.1", "master", "(cd modules/foo; git push origin master:release/0.2)"},
 		{"a", false, false, "release/0.1", "develop", ""},
@@ -176,8 +176,8 @@ func TestGitPushCmds(t *testing.T) {
 	git.Writer = buf
 	git.PushCmds("./files/git-push-cmds.src", "./files/git-push-cmds.dst")
 	assert.Equal(t, strings.TrimSpace(`
-(cd modules/foo; git branch a-sha1-abcd1234 release/0.2; git push origin release/0.2:release/0.2)
-(cd modules/bar; git branch a-topic-sha1 release/0.2; git push origin release/0.2:release/0.2)
+(cd modules/foo; git branch release/0.2 a-sha1-abcd1234; git push origin release/0.2:release/0.2)
+(cd modules/bar; git branch release/0.2 a-topic-sha1; git push origin release/0.2:release/0.2)
 # INFO: modules/fiz is referred at a-sha1-abcd1234
 	`)+"\n", buf.String())
 }
