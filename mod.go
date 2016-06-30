@@ -56,13 +56,8 @@ func (m Mod) Format() string {
 	return fmt.Sprintf("mod '%s', :git => '%s', :ref => '%s'", m.name, m.opts["git"], m.Ref())
 }
 
-var defaultBranch string = ""
-
 func (m Mod) Ref() string {
 	if m.opts["ref"] == "" {
-		if m.version == "" {
-			return defaultBranch
-		}
 		return m.version
 	}
 	return m.opts["ref"]

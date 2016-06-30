@@ -10,7 +10,8 @@ func bumpUp(a, b string, init string) {
 	bm := parse(b)
 
 	for _, n := range bm {
-		fmt.Println(bumpUpMod(n, am, init, a, gitDiff))
+		e, _ := bumpUpMod(n, am, init, a, gitDiff)
+		fmt.Println(e)
 	}
 }
 
@@ -68,6 +69,9 @@ func (g *Git) bumpUpMod(n Mod, mods []Mod, rel, filename string) (string, error)
 
 	d := g.Diff(n.Dest(), aref, bref)
 	if d == "" {
+		if n.opts["git"] == "" {
+			return n.Format(), nil
+		}
 		opts := map[string]string{"git": n.opts["git"], "ref": m.Ref()}
 		p := Mod{name: n.name, version: n.version, opts: opts}
 		return p.Format(), nil

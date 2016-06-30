@@ -41,9 +41,6 @@ func TestModRef(t *testing.T) {
 
 	mods, _ = parsePuppetfile(r(`mod 'foobar/brabra'`))
 	assert.Equal(t, "", mods[0].Ref())
-
-	defaultBranch = "master"
-	assert.Equal(t, "master", mods[0].Ref())
 }
 
 func TestModRefSemver(t *testing.T) {

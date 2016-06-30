@@ -16,7 +16,7 @@ func TestBumpUpMod(t *testing.T) {
 		return false
 	}
 	isTag := func(wd, name string) bool {
-		if name == "v0.1.3" || name == "v0.2.1" {
+		if name == "v0.1.3" || name == "v0.2.1" || name == "3.0.3" {
 			return true
 		}
 		return false
@@ -32,7 +32,7 @@ func TestBumpUpMod(t *testing.T) {
 	}{
 		//
 		{
-			"", nodiff, false,
+			"release/0.1", nodiff, false,
 			``,
 			`mod 'dprince/qpid'`,
 			`mod 'dprince/qpid'`},
@@ -42,46 +42,57 @@ func TestBumpUpMod(t *testing.T) {
 			`mod 'fiz/buz', :git => 'abc', :ref => '01234'`,
 			`mod 'fiz/buz', :git => 'abc', :ref => 'initial'`},
 		{
-			"", diff, false,
+			"release/0.1", diff, false,
 			`mod 'a/b', :git => 'aaa'`,
 			`mod 'a/b', :git => 'aaa', :ref => 'development'`,
 			`mod 'a/b', :git => 'aaa', :ref => 'development'`},
 		{
-			"", nodiff, false,
+			"release/0.1", nodiff, false,
 			`mod 'a/b', :git => 'aaa', :ref => 'release/0.1'`,
 			`mod 'a/b', :git => 'aaa', :ref => 'development'`,
 			`mod 'a/b', :git => 'aaa', :ref => 'release/0.1'`},
 		{
-			"", nodiff, false,
+			"release/0.1", nodiff, false,
 			`mod 'a/b', :git => 'aaa', :ref => '0123456789a'`,
 			`mod 'a/b', :git => 'aaa', :ref => 'development'`,
 			`mod 'a/b', :git => 'aaa', :ref => '0123456789a'`},
 		{
-			"", diff, false,
+			"release/0.1", diff, false,
 			`mod 'a/b', :git => 'aaa', :ref => 'release/0.1'`,
 			`mod 'a/b', :git => 'aaa', :ref => 'development'`,
 			`mod 'a/b', :git => 'aaa', :ref => 'release/0.2'`},
 		//
 		{
-			"", diff, false,
+			"release/0.1", diff, false,
 			`mod 'a/b', :git => 'aaa', :ref => 'v0.1.3'`,
 			`mod 'a/b', :git => 'aaa', :ref => 'release/0.2'`,
 			`mod 'a/b', :git => 'aaa', :ref => 'v0.2.0'`},
 		{
-			"", nodiff, false,
+			"release/0.1", nodiff, false,
 			`mod 'a/b', :git => 'aaa', :ref => 'v0.2.1'`,
 			`mod 'a/b', :git => 'aaa', :ref => 'release/0.2'`,
 			`mod 'a/b', :git => 'aaa', :ref => 'v0.2.1'`},
 		{
-			"", diff, false,
+			"release/0.1", diff, false,
 			`mod 'a/b', :git => 'aaa', :ref => 'v0.2.1'`,
 			`mod 'a/b', :git => 'aaa', :ref => 'release/0.2'`,
 			`mod 'a/b', :git => 'aaa', :ref => 'v0.2.2'`},
 		{
-			"", diff, true,
+			"release/0.1", diff, true,
 			`mod 'a/b', :git => 'aaa', :ref => 'v0.2.1'`,
 			`mod 'a/b', :git => 'aaa', :ref => 'release/foobar'`,
 			``},
+		//
+		{
+			"release/0.1", nodiff, false,
+			`mod 'puppetlabs/ntp', '3.0.3'`,
+			`mod 'puppetlabs/ntp', '3.0.3'`,
+			`mod 'puppetlabs/ntp', '3.0.3'`},
+		{
+			"release/0.1", diff, false,
+			``,
+			`mod 'jdowning/statsd'`,
+			`mod 'jdowning/statsd'`},
 	}
 
 	for _, c := range tests {
