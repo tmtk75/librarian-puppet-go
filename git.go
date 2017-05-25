@@ -68,6 +68,10 @@ func gitPull(dest, ref string) error {
 	return run(dest, "git", []string{"pull", "origin", ref})
 }
 
+func gitSetUrl(dest, url string) error {
+	return run(dest, "git", []string{"remote", "set-url", "origin", url})
+}
+
 func gitCheckout(dest, ref string, force bool) error {
 	if ref == "" {
 		ref = "master"
