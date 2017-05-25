@@ -109,15 +109,16 @@ func (c installCmd) installMod(m Mod) error {
 	//logger.Printf("%v\n", m)
 
 	// start git operations
-	err := gitSetUrl(m.Dest(), m.opts["git"])
-	if err != nil {
-		return err
-	}
-
+	var err error
 	if !exists(m.Dest()) {
 		err = gitClone(m.opts["git"], m.Dest())
 		m.cmd = "clone"
 	} else {
+		err = gitSetUrl(m.Dest(), m.opts["git"])
+		if err != nil {
+			return err
+		}
+
 		if !c.onlyCheckout {
 			err = gitFetch(m.Dest())
 			m.cmd = "fetch"
