@@ -25,4 +25,4 @@ workflows:
   build_and_test:
     jobs:
       - go1.8
-      - go1.7
+      #- go1.7
