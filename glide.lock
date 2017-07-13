@@ -1,6 +1,18 @@
 hash: 8764f5f35bd8469f83cb040d1da0ed441661212f5b98a01ffb331cbb102f08b4
-updated: 2016-06-04T00:01:11.095598509+09:00
+updated: 2017-07-14T06:31:24.535594886+09:00
 imports:
 - name: github.com/jawher/mow.cli
-  version: 772320464101e904cd51198160eb4d489be9cc49
-devImports: []
+  version: 0de3d3b4ed00f261460d12ecde4efa90fbfcd8ed
+testImports:
+- name: github.com/davecgh/go-spew
+  version: 6d212800a42e8ab5c146b8ace3490ee17e5225f9
+  subpackages:
+  - spew
+- name: github.com/pmezard/go-difflib
+  version: d8ed2627bdf02c080bf22230dbb337003b7aba2d
+  subpackages:
+  - difflib
+- name: github.com/stretchr/testify
+  version: 69483b4bd14f5845b5a1e55bca19e954e827f1d0
+  subpackages:
+  - assert
