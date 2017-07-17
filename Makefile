@@ -1,6 +1,9 @@
 ./librarian-puppet-go: *.go cmd/librarian-puppet-go/main.go
 	go build -o librarian-puppet-go cmd/librarian-puppet-go/main.go
 
+dep:
+	dep ensure
+
 install:
 	(cd cmd/librarian-puppet-go; go install)
 

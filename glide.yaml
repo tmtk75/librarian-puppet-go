@@ -1,3 +1,0 @@
-package: github.com/tmtk75/librarian-puppet-go
-import:
-- package: github.com/jawher/mow.cli
