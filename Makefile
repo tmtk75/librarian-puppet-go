@@ -4,8 +4,10 @@
 dep:
 	dep ensure
 
+VERSION := $(shell git describe --tags)
+LDFLAGS := -ldflags "-X github.com/tmtk75/librarian-puppet-go.Version=$(VERSION)"
 install:
-	(cd cmd/librarian-puppet-go; go install)
+	go install $(LDFLAGS) ./cmd/librarian-puppet-go
 
 XC_ARCH=amd64
 XC_OS=linux darwin
@@ -15,8 +17,10 @@ build:
 	for arch in $(XC_ARCH); do \
 	  for os in $(XC_OS); do \
 	    echo $$arch $$os; \
-	    GOARCH=$$arch GOOS=$$os go build -o pkg/librarian-puppet-go_$${os}_$$arch \
-	    ./cmd/librarian-puppet-go/main.go; \
+	    GOARCH=$$arch GOOS=$$os go build \
+	      $(LDFLAGS) \
+	      -o pkg/librarian-puppet-go_$${os}_$$arch \
+	      ./cmd/librarian-puppet-go/main.go; \
 	  done; \
 	done
 
