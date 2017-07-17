@@ -7,8 +7,8 @@ jobs:
     working_directory: /go/src/github.com/tmtk75/librarian-puppet-go
     steps:
       - checkout
-      - run: go get -v github.com/Masterminds/glide
-      - run: glide update
+      - run: go get -v github.com/golang/dep
+      - run: dep ensure
       - run: make build
       - run: go test -v .
 
