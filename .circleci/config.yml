@@ -7,7 +7,7 @@ jobs:
     working_directory: /go/src/github.com/tmtk75/librarian-puppet-go
     steps:
       - checkout
-      - run: go get -v github.com/golang/dep
+      - run: go get -v github.com/golang/dep/cmd/dep
       - run: dep ensure
       - run: make build
       - run: go test -v .
