@@ -31,6 +31,7 @@ func CLIMain() {
                  Max is number of mod, min is 1. Max is used if 0 or negative number is given.`}
 		forceOpt    = cli.BoolOpt{Name: "force f", Desc: "checkout with --force"}
 		includesOpt = cli.StringOpt{Name: "includes-with-repository-name", Value: ".*", Desc: "Specify modules to be installed"}
+		timeoutOpt  = cli.IntOpt{Name: "timeout", Value: 60 * 3, Desc: "Timeout to clone or fetch by git"}
 	)
 	f := func(b bool) func(c *cli.Cmd) {
 		return func(c *cli.Cmd) {
@@ -38,8 +39,10 @@ func CLIMain() {
 			throttle := c.Int(throttleOpt)
 			force := c.Bool(forceOpt)
 			includes := c.String(includesOpt)
+			tout := c.Int(timeoutOpt)
 			c.Spec = "[OPTIONS] FILE"
 			c.Action = func() {
+				timeout = *tout
 				c := installCmd{
 					throttle:             *throttle,
 					forceCheckout:        *force,

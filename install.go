@@ -56,7 +56,7 @@ func (c installCmd) install(src io.Reader) {
 	if c.throttle < 1 || len(mods) < c.throttle {
 		c.throttle = len(mods)
 	}
-	logger.Printf("mods size: %v, throttle: %v", len(mods), c.throttle)
+	logger.Printf("mods size: %v, throttle: %v, timeout: %v", len(mods), c.throttle, timeout)
 
 	var wg sync.WaitGroup
 	wg.Add(len(mods))

@@ -3,6 +3,7 @@ package librarianpuppetgo
 import (
 	"bufio"
 	"bytes"
+	"context"
 	"io"
 	"log"
 	"os"
@@ -13,6 +14,7 @@ import (
 )
 
 var modulePath string = "modules"
+var timeout int = 180 // Timeout for run. This needs to be sufficient to clone each git repository.
 
 func isCommit(dest, sha1 string) bool {
 	cmd := exec.Command("git", "show", "-q", sha1)
@@ -83,20 +85,28 @@ func gitCheckout(dest, ref string, force bool) error {
 }
 
 func run(wd, s string, args []string) error {
-	cmd := exec.Command(s, args...)
+	d := time.Duration(timeout) * time.Second
+	ctx, cancel := context.WithTimeout(context.Background(), d)
+	defer cancel()
+
+	cmd := exec.CommandContext(ctx, s, args...)
 	cmd.Dir = wd
-	//cmd.Stdout = os.Stdout
-	//cmd.Stderr = os.Stderr
 	buf := bytes.NewBuffer([]byte{})
 	cmd.Stderr = bufio.NewWriter(buf)
 	logger.Printf("start: %v %v in %v", s, args, wd)
 	now := time.Now()
 	err := cmd.Run()
+
+	if ctx.Err() == context.DeadlineExceeded {
+		log.Printf("[cancel] %v\t%v\t%v\t%v\n", err, args, buf, d)
+		return ctx.Err()
+	}
 	prefix := "done"
 	if err != nil {
 		prefix = "error"
 		log.Printf("[error] %v\t%v\t%v\n", err, args, buf)
 	}
+
 	elapsed := time.Since(now)
 	logger.Printf("%v: %v %v %v in %v", prefix, elapsed, s, args, wd)
 	return err
