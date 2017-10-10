@@ -11,7 +11,6 @@ install:
 
 XC_ARCH=amd64
 XC_OS=linux darwin
-version=`./librarian-puppet-go --version 2>&1`
 
 build:
 	for arch in $(XC_ARCH); do \
@@ -26,7 +25,7 @@ build:
 
 release: compress ./librarian-puppet-go
 	rm -f pkg/*_amd64 pkg/*.exe
-	ghr -u tmtk75 v$(version) pkg
+	ghr -u tmtk75 $(VERSION) pkg
 
 compress: pkg/librarian-puppet-go_darwin_amd64.tar.gz \
 	  pkg/librarian-puppet-go_linux_amd64.tar.gz
