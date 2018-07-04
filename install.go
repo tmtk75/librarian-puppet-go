@@ -168,6 +168,10 @@ func giturl(m Mod) string {
 	}
 	c := http.Client{}
 	res, err := c.Do(req)
+	if err != nil {
+		log.Fatalf("%v", err)
+	}
+
 	if (res.StatusCode / 100) != 2 {
 		log.Fatalf("%v\t%v\t%v\n", m, ep, res)
 	}
